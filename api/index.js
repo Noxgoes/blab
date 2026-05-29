@@ -100,6 +100,10 @@ Return ONLY valid JSON, no markdown:
 
 // Serverless API endpoints
 app.post("/api/translate-topic", async (req, res) => {
+  if (!process.env.GROQ_API_KEY) {
+    return res.status(500).json({ error: "GROQ_API_KEY is missing from Vercel environment variables. Configure it in your Vercel Project Settings." });
+  }
+
   const { topic, language } = req.body;
   if (!topic || !language || language.toLowerCase() === 'english') {
     return res.json({ translatedTopic: topic });
@@ -130,6 +134,10 @@ app.post("/api/translate-topic", async (req, res) => {
 });
 
 app.post("/api/analyze", analyzeLimiter, async (req, res) => {
+  if (!process.env.GROQ_API_KEY) {
+    return res.status(500).json({ error: "GROQ_API_KEY is missing from Vercel environment variables. Configure it in your Vercel Project Settings." });
+  }
+
   const { transcript, fillerCounts, language, level, topic } = req.body;
 
   if (!transcript || transcript.trim().split(/\s+/).length < 10) {

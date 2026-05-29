@@ -389,7 +389,7 @@ export default function Feedback({ language, level, topic, transcript, fillerCou
     const baseScore = Math.max(20, 100 - (fillerTotal * 5))
     return {
       score: baseScore,
-      coach_line: errorMsg ? `Local Review fallback due to API Error: "${errorMsg}"` : "The API is struggling, but you aren't. Here's a local tally.",
+      coach_line: "The API went quiet, but your voice shouldn't. Here is your local analysis.",
       filler_breakdown: { ...fillerCounts, total: fillerTotal, verdict: fillerTotal > 5 ? 'Heavy' : 'Clean' },
       xp: Math.round(baseScore * 0.5),
       rank: "Brave Speaker",
@@ -449,7 +449,7 @@ export default function Feedback({ language, level, topic, transcript, fillerCou
           <div className="sc3__score-label">FLUENCY SCORE</div>
           <svg className="sc3__waveform" viewBox="0 0 200 28" preserveAspectRatio="none">
             {Array.from({ length: 36 }).map((_, idx) => {
-              const h = Math.sin(idx * 0.7) * 10 + Math.cos(idx * 1.4) * 6 + 14
+              const h = Math.max(1, Math.sin(idx * 0.7) * 10 + Math.cos(idx * 1.4) * 6 + 14)
               const isRed = idx >= 24 && idx <= 28
               return <rect key={idx} x={idx * 5.6} y={14 - h / 2} width="2" height={h} rx="1" fill={isRed ? "#cc2b2b" : "rgba(255,255,255,0.12)"} />
             })}

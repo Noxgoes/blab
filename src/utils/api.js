@@ -18,7 +18,11 @@ export async function analyzeSpeech(transcript, fillerCounts, language, level, t
     return await res.json();
   } catch (err) {
     if (err.name === 'TypeError' || err.message.toLowerCase().includes('fetch')) {
-      throw new Error("Local backend server is offline. Run 'node server.js' to start it on port 3002.");
+      if (import.meta.env.DEV) {
+        throw new Error("Local backend server is offline. Run 'node server.js' to start it on port 3002.");
+      } else {
+        throw new Error("Vercel Serverless API is unreachable. Ensure Vercel Serverless configurations are fully deployed.");
+      }
     }
     throw err;
   }

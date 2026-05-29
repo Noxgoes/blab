@@ -1,0 +1,198 @@
+Build the complete BLAB product flow using the SAME visual language, typography system, spacing, motion style, and editorial aesthetic as the landing page design.
+
+Maintain:
+- the premium editorial feel
+- elegant serif typography
+- cream/off-white backgrounds
+- black typography
+- muted salmon/deep red accents
+- asymmetrical composition
+- kinetic speech-inspired motion
+- luxury minimal UI
+- subtle waveform/speech visualization
+- refined spacing and hierarchy
+
+The app should feel like one continuous premium experience from landing page to product.
+
+==================================================
+PRODUCT FLOW
+==================================================
+
+1. SETUP SCREEN
+Users select:
+- language
+- fluency level
+- mode
+
+Languages:
+Spanish, French, German, Japanese, Mandarin, Arabic, Portuguese, Italian, Hindi
+
+Levels:
+- Beginner
+- Intermediate
+- Advanced
+
+Modes:
+- Normal
+- Nightmare Mode
+
+Nightmare Mode should feel psychologically intense and unpredictable.
+
+Avoid standard dropdown UI.
+Use elegant editorial selection components.
+
+Primary CTA:
+"FIND MY TOPIC"
+
+==================================================
+2. TOPIC GENERATION EXPERIENCE
+==================================================
+
+This is the signature cinematic moment.
+
+The system should feel like:
+an AI searching through thoughts, conversations, memories, and speech fragments.
+
+Use:
+- kinetic typography
+- moving transcript fragments
+- floating words
+- subtle waveform motion
+- dynamic text transitions
+- intelligent scanning aesthetics
+
+The system rapidly cycles through topic fragments before locking onto one final topic.
+
+After selection:
+- the final topic expands dramatically into focus
+- everything else fades back
+- show a 5-second countdown
+
+Then recording starts automatically.
+
+==================================================
+3. RECORDING SCREEN
+==================================================
+
+The recording experience should feel:
+focused, minimal, intense, performance-driven.
+
+Include:
+- live waveform visualization
+- elegant recording timer
+- subtle microphone indicator
+- live speech transcript
+- subtle real-time speaking analysis
+
+Examples of live analysis:
+- hesitation detected
+- filler word spike
+- confidence dropping
+- long pause
+
+Transcript should appear dynamically and elegantly, not like a plain textbox.
+
+Primary CTA:
+"STOP & SUBMIT"
+
+==================================================
+4. ANALYZING SCREEN
+==================================================
+
+Short transition state while AI analyzes speech.
+
+Use:
+- moving waveform lines
+- transcript fragments
+- subtle scanning motion
+- elegant typography animations
+
+Example analysis states:
+- Analyzing fluency...
+- Detecting hesitation patterns...
+- Evaluating confidence...
+- Measuring spontaneity...
+
+The screen should feel intelligent and cinematic.
+
+==================================================
+5. FEEDBACK SCREEN
+==================================================
+
+This is the emotional payoff.
+
+Display:
+- large fluency score
+- brutally honest coach line
+- strengths
+- weaknesses
+- improved sentence suggestion
+- XP earned
+
+Structure:
+- What You Did Well
+- Where You Fell Apart
+- The Sentence You Should Have Said
+
+Feedback tone:
+direct, psychologically sharp, brutally honest.
+
+Examples:
+- "You paused every time your ideas became complex."
+- "Your confidence collapsed halfway through."
+- "Too many filler words weakened your delivery."
+
+Use elegant editorial layouts.
+Avoid dashboard/card-heavy SaaS design.
+
+==================================================
+6. SHARE CARD GENERATOR
+==================================================
+
+Generate premium social-share cards matching the landing page aesthetic.
+
+Include:
+- topic
+- score
+- coach line
+- rank
+- BLAB branding
+
+The card should feel:
+minimal, cinematic, and post-worthy.
+
+==================================================
+7. RANK + XP SYSTEM
+==================================================
+
+Ranks:
+- Mute
+- Mumbler
+- Rambler
+- Smooth Talker
+- Ghost Speaker
+
+Treat ranks like:
+luxury classifications, not game badges.
+
+Track:
+- total XP
+- streak
+- sessions
+- session history
+
+==================================================
+OVERALL EXPERIENCE
+==================================================
+
+The entire experience should feel like:
+a premium speaking-performance system.
+
+NOT:
+- an education app
+- a productivity dashboard
+- a generic AI startup
+- Duolingo-style gamification
+
+Core emotional feeling:
+"Speaking under pressure is a performance."

@@ -1,6 +1,8 @@
+const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://localhost:3002' : '/api');
+
 export async function analyzeSpeech(transcript, fillerCounts, language, level, topic) {
   try {
-    const res = await fetch("http://localhost:3002/analyze", {
+    const res = await fetch(`${API_URL}/analyze`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ transcript, fillerCounts, language, level, topic })

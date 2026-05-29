@@ -18,6 +18,8 @@ import AuthModal from './components/AuthModal'
 import AccountModal from './components/AccountModal'
 
 
+const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://localhost:3002' : '/api');
+
 export default function App() {
   const navigate = useNavigate()
   const location = useLocation()
@@ -212,7 +214,7 @@ export default function App() {
       let finalTopic = generatedTopic
       if (language.toLowerCase() !== 'english') {
         try {
-          const res = await fetch("http://localhost:3002/translate-topic", {
+          const res = await fetch(`${API_URL}/translate-topic`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ topic: generatedTopic, language })

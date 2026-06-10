@@ -7326,7 +7326,7 @@ h3,
 
   /* About screen overrides */
   .about-screen {
-    padding: 105px 16px 80px 16px !important;
+    padding: 70px 16px 80px 16px !important;
   }
   .about__container {
     gap: 2.5rem !important;
@@ -7337,7 +7337,7 @@ h3,
 
   /* Contact screen overrides */
   .contact-screen {
-    padding: 105px 16px 160px 16px !important;
+    padding: 70px 16px 160px 16px !important;
   }
   .contact__container {
     gap: 2.5rem !important;
@@ -7353,7 +7353,7 @@ h3,
   }
 
   .ldb {
-    padding: 110px 16px 40px !important;
+    padding: 75px 16px 40px !important;
   }
 
   .app--landing {

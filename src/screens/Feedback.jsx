@@ -756,16 +756,7 @@ export default function Feedback({ language, level, topic, transcript, fillerCou
           ) : <p className="fbc__save-label">+{data.xp || 0} XP earned</p>)}
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10, width: '100%', marginTop: 8 }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, width: '100%' }}>
-            <button className="fbc__copy-btn" onClick={handleDownloadPNG} style={{ margin: 0, width: '100%' }}>{copied ? 'DOWNLOADING...' : 'DOWNLOAD PNG'}</button>
-            <button 
-              className="fbc__copy-btn" 
-              onClick={handleShareX}
-              style={{ margin: 0, width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-            >
-              SHARE ON X
-            </button>
-          </div>
+          <button className="fbc__copy-btn" onClick={handleDownloadPNG} style={{ margin: 0, width: '100%' }}>{copied ? 'DOWNLOADING...' : 'DOWNLOAD PNG'}</button>
           <button className="fbc__copy-btn fbc__copy-btn--ghost" onClick={onRestart} style={{ margin: 0, width: '100%' }}>SPEAK AGAIN</button>
         </div>
       </div>

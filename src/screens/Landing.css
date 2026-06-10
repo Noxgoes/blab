@@ -539,10 +539,16 @@
 /* ============ RESPONSIVE ============ */
 @media (max-width: 900px) {
   .landing-page { height: auto !important; min-height: 0 !important; overflow: visible !important; }
+  .app--landing {
+    height: auto !important;
+    min-height: 100vh !important;
+    overflow-y: auto !important;
+  }
 
   /* Nav */
   .lp-nav { padding: 0.75rem 1rem; }
   .lp-nav__links { display: none; }
+  .lp-nav__cta--speak { display: none !important; }
   .lp-nav__links-mobile {
     display: flex;
   }

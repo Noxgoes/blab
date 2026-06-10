@@ -7306,22 +7306,95 @@ h3,
     font-size: 11px !important;
   }
 
-  /* Leaderboard Screen */
-  .ldb__container {
-    width: 100% !important;
-    padding: 10px !important;
+  /* Leaderboard Screen Real Classes Optimizations */
+  .ldb__header {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 16px !important;
   }
-  .ldb__podium {
+  .ldb__title-area {
+    text-align: center !important;
+  }
+  .ldb__title {
+    font-size: 36px !important;
+  }
+  .ldb__filter-group {
+    justify-content: center !important;
+  }
+  .ldb__my-strip {
     flex-direction: column !important;
     align-items: center !important;
-    gap: 1.5rem !important;
+    gap: 12px !important;
+    padding: 16px 20px !important;
+    text-align: center !important;
   }
-  .ldb__podium-col {
-    width: 100% !important;
-    max-width: 280px !important;
+  .ldb__my-strip-left {
+    flex-direction: column !important;
+    gap: 8px !important;
   }
-  .ldb__table-header, .ldb__row {
+  .ldb__my-strip-right {
+    font-size: 10px !important;
+  }
+  .ldb__row-top {
+    padding: 16px 8px !important;
+    gap: 8px !important;
+  }
+  .ldb__top-rank {
+    width: 32px !important;
+  }
+  .ldb__row-top--1 .ldb__top-rank {
+    font-size: 24px !important;
+  }
+  .ldb__row-top--2 .ldb__top-rank,
+  .ldb__row-top--3 .ldb__top-rank {
+    font-size: 20px !important;
+  }
+  .ldb__top-user {
+    font-size: 14px !important;
+    min-width: 0 !important;
+    word-break: break-all !important;
+  }
+  .ldb__row-top--1 .ldb__top-user {
+    font-size: 16px !important;
+  }
+  .ldb__top-badge {
+    display: none !important; /* Hide badge on mobile to save horizontal space */
+  }
+  .ldb__top-lang {
+    width: 48px !important;
+    font-size: 9px !important;
+  }
+  .ldb__top-score {
+    width: 48px !important;
+    font-size: 16px !important;
+  }
+  .ldb__row-top--1 .ldb__top-score {
+    font-size: 22px !important;
+  }
+  .ldb__row-top--2 .ldb__top-score,
+  .ldb__row-top--3 .ldb__top-score {
+    font-size: 18px !important;
+  }
+  .ldb__row-compact {
+    padding: 0 8px !important;
+    gap: 8px !important;
+    height: 44px !important;
+  }
+  .ldb__comp-rank {
+    width: 32px !important;
     font-size: 11px !important;
+  }
+  .ldb__comp-user {
+    font-size: 13px !important;
+    min-width: 0 !important;
+  }
+  .ldb__comp-type {
+    font-size: 8px !important;
+    letter-spacing: 0.05em !important;
+  }
+  .ldb__comp-score {
+    width: 48px !important;
+    font-size: 15px !important;
   }
 
   /* About screen overrides */

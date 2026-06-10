@@ -73,7 +73,7 @@ export default function GlobalNav({ onStart, isAnalyzing, user, userData, onOpen
               {quitLabel} <span className="lp-nav__cta-arrow">{quitArrow}</span>
             </button>
           ) : (
-            <button className="lp-nav__cta lp-nav__cta--pill" onClick={onStart}>
+            <button className="lp-nav__cta lp-nav__cta--pill lp-nav__cta--speak" onClick={onStart}>
               SPEAK <span className="lp-nav__cta-arrow">↗</span>
             </button>
           )}

@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-dom'
 import './index.css'
 import Landing from './screens/Landing'
+import './screens/Landing.css'
 import Setup from './screens/Setup'
 import TopicGeneration from './screens/TopicGeneration'
 import Recording from './screens/Recording'
@@ -62,6 +63,9 @@ export default function App() {
   })
   const [rankUp, setRankUp] = useState(null)
 
+  // ── MICROPHONE SHARED STATE ────────────────────────────────────────
+  const [micStream, setMicStream] = useState(null)
+
   // ── AUTHENTICATION STATE ───────────────────────────────────────────
   const [user, setUser] = useState(null)
   const [showAuthModal, setShowAuthModal] = useState(false)
@@ -104,6 +108,15 @@ export default function App() {
       data: { blab_user_data: checkedMerged }
     })
   }, [])
+
+  // Cleanup microphone stream when exiting the session flow
+  useEffect(() => {
+    const isSessionFlow = ['/setup', '/topic', '/recording', '/feedback'].includes(location.pathname)
+    if (!isSessionFlow && micStream) {
+      micStream.getTracks().forEach(t => t.stop())
+      setMicStream(null)
+    }
+  }, [location.pathname, micStream])
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -226,7 +239,10 @@ export default function App() {
     navigate('/setup')
   }, [navigate])
 
-  const handleSetupDone = useCallback(async () => {
+  const handleSetupDone = useCallback(async (stream) => {
+    if (stream) {
+      setMicStream(stream)
+    }
     if (!language || !level || !mode) return // Guard (Requirement)
     try {
       const generatedTopic = getRandomTopic(mode, level)
@@ -278,7 +294,7 @@ export default function App() {
     } catch (err) {
       console.error('Topic selection failed:', err)
     }
-  }, [language, level, mode, navigate])
+  }, [language, level, mode, navigate, setMicStream])
 
   const handleTopicReady = useCallback((t) => {
     setTopic(t)
@@ -297,8 +313,12 @@ export default function App() {
     setTranscript('')
     setFeedbackData(null)
     setFillerCounts({})
+    if (micStream) {
+      micStream.getTracks().forEach(t => t.stop())
+      setMicStream(null)
+    }
     navigate('/setup')
-  }, [navigate])
+  }, [micStream, navigate])
 
   const handleFeedbackReceived = useCallback(async (data) => {
     setFeedbackData(data)
@@ -390,12 +410,19 @@ export default function App() {
           <TopicGeneration
             language={language} level={level} mode={mode}
             topic={topic}
+            micStream={micStream}
             onReady={handleTopicReady}
           />
         } />
         <Route path="/recording" element={
           !topic ? <Navigate to="/setup" replace /> :
-          <Recording topic={topic} language={language} onDone={handleRecordingDone} />
+          <Recording 
+            topic={topic} 
+            language={language} 
+            micStream={micStream} 
+            setMicStream={setMicStream} 
+            onDone={handleRecordingDone} 
+          />
         } />
         <Route path="/feedback" element={
           !transcript && !feedbackData ? <Navigate to="/setup" replace /> :

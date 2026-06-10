@@ -4,7 +4,7 @@ const STAR_COUNT = 1200
 const SEARCH_DURATION = 2000
 const ZOOM_DURATION = 1500
 
-export default function TopicGeneration({ language, level, mode, topic, onReady }) {
+export default function TopicGeneration({ language, level, mode, topic, micStream, onReady }) {
   const canvasRef = useRef(null)
   const starsRef = useRef([])
   const phaseRef = useRef('search')
@@ -217,6 +217,10 @@ export default function TopicGeneration({ language, level, mode, topic, onReady 
 
   // ── MIC INITIALIZATION (Edge Case 2 & 8) ───────────────────────────
   const initMic = useCallback(async () => {
+    if (micStream && micStream.active) {
+      setMicState('ready')
+      return
+    }
     setMicState('initializing')
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
@@ -229,7 +233,7 @@ export default function TopicGeneration({ language, level, mode, topic, onReady 
       setMicState('denied')
       setShowMicError(true)
     }
-  }, [])
+  }, [micStream])
 
   useEffect(() => {
     initMic()

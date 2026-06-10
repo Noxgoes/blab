@@ -40,6 +40,14 @@ export default function Landing({ userData, onStart }) {
   const [visibleAnnotations, setVisibleAnnotations] = useState([])
   const waveRef = useRef(null)
 
+  const [isMobile, setIsMobile] = useState(false)
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth <= 900)
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
+
   // Compute actual average fluency score
   const avgScore = userData.sessionHistory && userData.sessionHistory.length > 0
     ? Math.round(userData.sessionHistory.reduce((acc, s) => acc + s.score, 0) / userData.sessionHistory.length)
@@ -47,12 +55,14 @@ export default function Landing({ userData, onStart }) {
 
   // Stagger annotation appearance
   useEffect(() => {
-    FILLER_ANNOTATIONS.forEach((_, i) => {
+    const items = isMobile ? MOBILE_ANNOTATIONS : FILLER_ANNOTATIONS
+    setVisibleAnnotations([])
+    items.forEach((_, i) => {
       setTimeout(() => {
         setVisibleAnnotations(prev => [...prev, i])
       }, 800 + i * 300)
     })
-  }, [])
+  }, [isMobile])
 
   // Draw waveform
   useEffect(() => {
@@ -109,7 +119,7 @@ export default function Landing({ userData, onStart }) {
           </div>
 
           {/* Floating filler annotations */}
-          {FILLER_ANNOTATIONS.map((a, i) => (
+          {(isMobile ? MOBILE_ANNOTATIONS : FILLER_ANNOTATIONS).map((a, i) => (
             <div
               key={i}
               className={`lp-annotation ${visibleAnnotations.includes(i) ? 'lp-annotation--visible' : ''}`}
@@ -165,7 +175,7 @@ export default function Landing({ userData, onStart }) {
             {avgScore !== null && <span className="lp-stats__percent">%</span>}
           </div>
           <div className="lp-stats__meta">
-            <span className="lp-stats__label">FLUENCY UNDER PRESSURE</span>
+            <span className="lp-stats__label">{isMobile ? 'FLUENCY' : 'FLUENCY UNDER PRESSURE'}</span>
             <span className="lp-stats__sub-label">
               {avgScore !== null ? (avgScore >= 80 ? 'EXCELLENT' : avgScore >= 60 ? 'GOOD CONTROL' : avgScore >= 40 ? 'STEADY' : 'NEEDS WORK') : 'NO SESSIONS'}
             </span>

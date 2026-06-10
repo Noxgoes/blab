@@ -56,26 +56,18 @@ export default function Setup({ language, setLanguage, level, setLevel, mode, se
       if (navigator.permissions && navigator.permissions.query) {
         try {
           const status = await navigator.permissions.query({ name: 'microphone' })
-          if (status.state === 'granted') {
-            setIsRequestingMic(false)
-            setIsGenerating(true)
-            await onDone()
-            return
-          }
           if (status.state === 'denied') {
             throw new Error('Microphone access is blocked. Please enable it in browser settings.')
           }
         } catch (e) {
-          if (e.message.includes('blocked')) throw e
+          // ignore query permission errors
         }
       }
 
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
-      stream.getTracks().forEach(track => track.stop())
-
       setIsRequestingMic(false)
       setIsGenerating(true)
-      await onDone()
+      await onDone(stream)
     } catch (err) {
       console.error('Proceed error:', err)
       setMicError(err.message || 'Error occurred. Please try again.')

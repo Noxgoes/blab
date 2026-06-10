@@ -24,7 +24,7 @@ const fillerWordMap = {
   'ar': ['يعني','اممم','هاه','بالضبط','اه','طب']
 }
 
-export default function Recording({ topic, language, onDone }) {
+export default function Recording({ topic, language, micStream, setMicStream, onDone }) {
   const selectedLanguage = language || 'English'
   const initialLangCode = languageCodes[selectedLanguage] || 'en'
   const initialFillerList = fillerWordMap[initialLangCode] || fillerWordMap['en']
@@ -98,12 +98,17 @@ export default function Recording({ topic, language, onDone }) {
     const initDeepgram = async (codeToUse, isFallback = false) => {
       try {
         if (!streamRef.current) {
-          const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
-          if (isCancelled) {
-            stream.getTracks().forEach(t => t.stop())
-            return
+          if (micStream && micStream.active) {
+            streamRef.current = micStream
+          } else {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+            if (isCancelled) {
+              stream.getTracks().forEach(t => t.stop())
+              return
+            }
+            streamRef.current = stream
+            if (setMicStream) setMicStream(stream)
           }
-          streamRef.current = stream
         }
 
         if (!intervalRef.current) {
@@ -196,8 +201,9 @@ export default function Recording({ topic, language, onDone }) {
       socketRef.current?.close()
       streamRef.current?.getTracks().forEach(t => t.stop())
       streamRef.current = null // allow remount to get fresh mic access
+      if (setMicStream) setMicStream(null)
     }
-  }, [initialLangCode, buildLines])
+  }, [initialLangCode, buildLines, micStream, setMicStream])
 
   // ── STOP LOGIC ─────────────────────────────────────────────────────
   const handleStop = useCallback(() => {
@@ -209,6 +215,7 @@ export default function Recording({ topic, language, onDone }) {
     if (mediaRecorderRef.current?.state !== 'inactive') mediaRecorderRef.current?.stop()
     socketRef.current?.close()
     streamRef.current?.getTracks().forEach(t => t.stop())
+    if (setMicStream) setMicStream(null)
 
     // Wait 800ms for Deepgram to flush any in-flight final transcript for the last utterance
     setTimeout(() => {
@@ -221,7 +228,7 @@ export default function Recording({ topic, language, onDone }) {
         onDone(best, fillerCountsRef.current)
       }
     }, 800)
-  }, [transcript, onDone, hasSubmitted])
+  }, [transcript, onDone, hasSubmitted, setMicStream])
 
   useEffect(() => {
     if (seconds >= AUTO_SUBMIT_AT) {

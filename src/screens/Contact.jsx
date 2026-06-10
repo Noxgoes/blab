@@ -1,20 +1,36 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
+const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://localhost:3002' : '/api');
+
 export default function Contact({ onStart }) {
   const navigate = useNavigate()
   const [formData, setFormData] = useState({ name: '', email: '', subject: 'Just saying hi! 💖', message: '' })
   const [submitted, setSubmitted] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState(null)
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
     setLoading(true)
-    // Carrier pigeon speed simulation
-    setTimeout(() => {
-      setLoading(false)
+    setError(null)
+    try {
+      const res = await fetch(`${API_URL}/send-email`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData)
+      })
+      if (!res.ok) {
+        const errJson = await res.json().catch(() => ({}))
+        throw new Error(errJson.error || 'Failed to send message.')
+      }
       setSubmitted(true)
-    }, 1200)
+    } catch (err) {
+      console.error(err)
+      setError(err.message || 'Something went wrong.')
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -28,7 +44,7 @@ export default function Contact({ onStart }) {
             TO THE CREATOR.
           </h1>
           <p className="contact__subtitle">
-            I built BLAB in my bedroom because I kept saying "um" and "like" during meetings. 
+            I built BLAB in my bedroom because I kept saying "um" and "like" during meetings.
             Got some thoughts, found some bugs, or just want to tell me you love the clean fonts? Ping me!
           </p>
         </header>
@@ -112,6 +128,8 @@ export default function Contact({ onStart }) {
                   />
                 </div>
 
+                {error && <div style={{ color: '#cc2b2b', fontFamily: 'var(--font-mono)', fontSize: 12, marginBottom: 12 }}>❌ {error}</div>}
+
                 <button type="submit" className="contact__submit-btn" disabled={loading} style={{ borderRadius: '8px' }}>
                   {loading ? '🦅 DISPATCHING PIGEON...' : 'FIRE PIGEON 🚀'}
                 </button>
@@ -123,7 +141,7 @@ export default function Contact({ onStart }) {
           <div className="contact__details" style={{ gap: '2rem' }}>
             <div className="contact__info-block" style={{ padding: '24px', background: 'rgba(255,255,255,0.3)', border: '1px solid rgba(0,0,0,0.06)', borderRadius: '16px' }}>
               <span className="contact__info-label" style={{ borderBottomColor: 'rgba(0,0,0,0.1)' }}>☕️ DEV FUEL & METRICS</span>
-              
+
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 8, fontFamily: 'var(--font-mono)', fontSize: 12, opacity: 0.8 }}>
                 <div>☕️ <strong>Coffee consumed today:</strong> 4.5 cups</div>
                 <div>🎧 <strong>Looping:</strong> Lo-Fi Beats to Cry/Code To</div>
@@ -151,11 +169,11 @@ export default function Contact({ onStart }) {
         </div>
 
         <footer className="contact__footer">
-          <button className="contact__cta" onClick={onStart} style={{ borderRadius: '30px' }}>
+          <button className="contact__cta" onClick={onStart} style={{ borderRadius: '30px', padding: '14px 32px', margin: '20px' }}>
             BACK TO SPEAKING ⚡
           </button>
         </footer>
       </div>
-    </div>
+    </div >
   )
 }

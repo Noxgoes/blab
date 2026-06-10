@@ -4,6 +4,25 @@ export default function GlobalNav({ onStart, isAnalyzing, user, userData, onOpen
   const navigate = useNavigate()
   const location = useLocation()
 
+  const isSessionFlow = ['/setup', '/topic', '/recording', '/feedback'].includes(location.pathname)
+
+  const handleQuit = () => {
+    if (location.pathname === '/recording') {
+      window.history.back() // triggers the confirm overlay in App.jsx
+    } else {
+      navigate('/')
+    }
+  }
+
+  let quitLabel = 'QUIT SESSION'
+  let quitArrow = '✕'
+  if (location.pathname === '/setup') {
+    quitLabel = 'CANCEL'
+  } else if (location.pathname === '/feedback') {
+    quitLabel = 'EXIT'
+    quitArrow = '→'
+  }
+
   return (
     <nav className="lp-nav lp-nav--global">
       <div className="lp-nav__left" onClick={() => navigate('/')} style={{ cursor: 'pointer' }}>
@@ -27,15 +46,20 @@ export default function GlobalNav({ onStart, isAnalyzing, user, userData, onOpen
         )}
       </div>
       <div className="lp-nav__actions">
-        {location.pathname !== '/' && (
-           <button className="lp-nav__cta lp-nav__cta--pill" onClick={onStart}>
-             BEGIN SESSION <span className="lp-nav__cta-arrow">↗</span>
-           </button>
-        )}
-        {location.pathname === '/' && (
-           <button className="lp-nav__cta lp-nav__cta--pill" onClick={onStart}>
-             BEGIN SPEAKING <span className="lp-nav__cta-arrow">↗</span>
-           </button>
+        {isSessionFlow ? (
+          <button className="lp-nav__cta lp-nav__cta--pill lp-nav__cta--quit" onClick={handleQuit}>
+            {quitLabel} <span className="lp-nav__cta-arrow">{quitArrow}</span>
+          </button>
+        ) : (
+          location.pathname === '/' ? (
+            <button className="lp-nav__cta lp-nav__cta--pill" onClick={onStart}>
+              BEGIN SPEAKING <span className="lp-nav__cta-arrow">↗</span>
+            </button>
+          ) : (
+            <button className="lp-nav__cta lp-nav__cta--pill" onClick={onStart}>
+              BEGIN SESSION <span className="lp-nav__cta-arrow">↗</span>
+            </button>
+          )
         )}
       </div>
     </nav>

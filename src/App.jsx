@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { Routes, Route, useNavigate, useLocation } from 'react-router-dom'
+import { Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-dom'
 import './index.css'
 import Landing from './screens/Landing'
 import Setup from './screens/Setup'
@@ -135,13 +135,32 @@ export default function App() {
 
 
   // ── SESSION STATE ───────────────────────────────────────────────────
-  const [language, setLanguage] = useState('')
-  const [level, setLevel] = useState('')
-  const [mode, setMode] = useState('normal')
-  const [topic, setTopic] = useState('')
-  const [transcript, setTranscript] = useState('')
-  const [fillerCounts, setFillerCounts] = useState({})
-  const [feedbackData, setFeedbackData] = useState(null)
+  const loadSessionState = (key, defaultVal) => {
+    try {
+      const stored = sessionStorage.getItem(`blab_${key}`)
+      return stored ? JSON.parse(stored) : defaultVal
+    } catch {
+      return defaultVal
+    }
+  }
+
+  const [language, setLanguage] = useState(() => loadSessionState('language', ''))
+  const [level, setLevel] = useState(() => loadSessionState('level', ''))
+  const [mode, setMode] = useState(() => loadSessionState('mode', 'normal'))
+  const [topic, setTopic] = useState(() => loadSessionState('topic', ''))
+  const [transcript, setTranscript] = useState(() => loadSessionState('transcript', ''))
+  const [fillerCounts, setFillerCounts] = useState(() => loadSessionState('fillerCounts', {}))
+  const [feedbackData, setFeedbackData] = useState(() => loadSessionState('feedbackData', null))
+
+  useEffect(() => {
+    sessionStorage.setItem('blab_language', JSON.stringify(language))
+    sessionStorage.setItem('blab_level', JSON.stringify(level))
+    sessionStorage.setItem('blab_mode', JSON.stringify(mode))
+    sessionStorage.setItem('blab_topic', JSON.stringify(topic))
+    sessionStorage.setItem('blab_transcript', JSON.stringify(transcript))
+    sessionStorage.setItem('blab_fillerCounts', JSON.stringify(fillerCounts))
+    sessionStorage.setItem('blab_feedbackData', JSON.stringify(feedbackData))
+  }, [language, level, mode, topic, transcript, fillerCounts, feedbackData])
 
   // ── BROWSER HISTORY / PERSISTENCE ───────────────────────────────────
   useEffect(() => {
@@ -213,6 +232,7 @@ export default function App() {
       const generatedTopic = getRandomTopic(mode, level)
       let finalTopic = generatedTopic
       if (language.toLowerCase() !== 'english') {
+        let translated = null
         try {
           const res = await fetch(`${API_URL}/translate-topic`, {
             method: "POST",
@@ -220,13 +240,37 @@ export default function App() {
             body: JSON.stringify({ topic: generatedTopic, language })
           })
           if (res.ok) {
-            const { translatedTopic } = await res.json()
-            if (translatedTopic && translatedTopic !== generatedTopic) {
-              finalTopic = `${translatedTopic}\n(${generatedTopic})`
-            }
+            const data = await res.json()
+            translated = data.translatedTopic
           }
         } catch (e) {
-          console.error("Translation error:", e)
+          console.warn("Backend translation failed, trying client-side fallback...", e)
+        }
+
+        // Client-side Google Translate fallback if backend failed or returned untranslated
+        if (!translated || translated === generatedTopic) {
+          try {
+            const languageCodes = {
+              'Spanish': 'es', 'French': 'fr', 'German': 'de', 'Italian': 'it',
+              'Portuguese': 'pt', 'Japanese': 'ja', 'Korean': 'ko', 'Hindi': 'hi', 'Mandarin': 'zh', 'Arabic': 'ar'
+            }
+            const code = languageCodes[language]
+            if (code) {
+              const fbRes = await fetch(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=${code}&dt=t&q=${encodeURIComponent(generatedTopic)}`)
+              if (fbRes.ok) {
+                const fbData = await fbRes.json()
+                if (fbData && fbData[0]) {
+                  translated = fbData[0].map(item => item[0]).join('').trim()
+                }
+              }
+            }
+          } catch (fbErr) {
+            console.error("Client-side fallback translation failed:", fbErr)
+          }
+        }
+
+        if (translated && translated !== generatedTopic) {
+          finalTopic = `${translated}\n(${generatedTopic})`
         }
       }
       setTopic(finalTopic)
@@ -244,6 +288,7 @@ export default function App() {
   const handleRecordingDone = useCallback((t, counts) => {
     setTranscript(t)
     setFillerCounts(counts || {})
+    setFeedbackData(null) // CRITICAL: Clear old feedback data so the new recording triggers an analysis
     navigate('/feedback')
   }, [navigate])
 
@@ -341,6 +386,7 @@ export default function App() {
           />
         } />
         <Route path="/topic" element={
+          !language || !level || !mode ? <Navigate to="/setup" replace /> :
           <TopicGeneration
             language={language} level={level} mode={mode}
             topic={topic}
@@ -348,9 +394,11 @@ export default function App() {
           />
         } />
         <Route path="/recording" element={
+          !topic ? <Navigate to="/setup" replace /> :
           <Recording topic={topic} language={language} onDone={handleRecordingDone} />
         } />
         <Route path="/feedback" element={
+          !transcript && !feedbackData ? <Navigate to="/setup" replace /> :
           <Feedback
             language={language} level={level} topic={topic}
             transcript={transcript}

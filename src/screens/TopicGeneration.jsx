@@ -80,19 +80,18 @@ export default function TopicGeneration({ language, level, mode, topic, onReady 
       const zoomT = Math.min(zoomElapsed / ZOOM_DURATION, 1)
       const easeT = zoomT * zoomT * (3 - 2 * zoomT)
 
-      let scale = 1, tx = 0, ty = 0
+      let scale = 1
       if (p === 'zoom' && chosenRef.current) {
         scale = 1 + easeT * 15
-        tx = (w / 2 - chosenRef.current.x) * easeT
-        ty = (h / 2 - chosenRef.current.y) * easeT
       }
 
       ctx.save()
-      ctx.translate(tx, ty)
       if (p === 'zoom' && chosenRef.current) {
-        ctx.translate(chosenRef.current.x, chosenRef.current.y)
+        const focusX = w / 2 + (chosenRef.current.x - w / 2) * easeT
+        const focusY = h / 2 + (chosenRef.current.y - h / 2) * easeT
+        ctx.translate(w / 2, h / 2)
         ctx.scale(scale, scale)
-        ctx.translate(-chosenRef.current.x, -chosenRef.current.y)
+        ctx.translate(-focusX, -focusY)
       }
 
       const now = Date.now() / 1000
@@ -111,6 +110,101 @@ export default function TopicGeneration({ language, level, mode, topic, onReady 
         ctx.shadowBlur = 0
       })
       ctx.restore()
+
+      // Draw screen-space overlay elements (Reticle, Scanning Lines)
+      if (p !== 'reveal') {
+        const timeSec = Date.now() / 1000
+        ctx.save()
+        
+        // 1. Horizontal scanline sweeping down
+        const scanY = ((Date.now() % 3000) / 3000) * h
+        ctx.beginPath()
+        ctx.moveTo(0, scanY)
+        ctx.lineTo(w, scanY)
+        ctx.strokeStyle = 'rgba(196, 30, 30, 0.12)'
+        ctx.lineWidth = 1.5
+        ctx.stroke()
+        
+        // 2. High-tech reticle at the center of screen (w / 2, h / 2)
+        const cx = w / 2
+        const cy = h / 2
+        
+        // Pulse scale
+        let reticleScale = 1
+        if (p === 'zoom') {
+          reticleScale = 1.5 - easeT * 0.5
+        } else {
+          reticleScale = 1.0 + Math.sin(timeSec * 4) * 0.05
+        }
+        
+        ctx.translate(cx, cy)
+        ctx.scale(reticleScale, reticleScale)
+        
+        // Rotating outer dashed circle
+        ctx.beginPath()
+        ctx.arc(0, 0, 45, 0, Math.PI * 2)
+        ctx.strokeStyle = p === 'zoom' ? '#c41e1e' : 'rgba(26, 26, 26, 0.2)'
+        ctx.lineWidth = 1.5
+        ctx.setLineDash([6, 12])
+        ctx.rotate(timeSec * (p === 'zoom' ? 1.5 : 0.4))
+        ctx.stroke()
+        ctx.setLineDash([]) // Reset
+        
+        // Stationary target brackets (four corners)
+        const bracketSize = 10
+        const bracketDist = 55
+        ctx.rotate(-timeSec * (p === 'zoom' ? 1.5 : 0.4)) // counter-rotate
+        
+        ctx.strokeStyle = '#c41e1e'
+        ctx.lineWidth = 2
+        
+        // Top-left bracket
+        ctx.beginPath()
+        ctx.moveTo(-bracketDist + bracketSize, -bracketDist)
+        ctx.lineTo(-bracketDist, -bracketDist)
+        ctx.lineTo(-bracketDist, -bracketDist + bracketSize)
+        ctx.stroke()
+        
+        // Top-right bracket
+        ctx.beginPath()
+        ctx.moveTo(bracketDist - bracketSize, -bracketDist)
+        ctx.lineTo(bracketDist, -bracketDist)
+        ctx.lineTo(bracketDist, -bracketDist + bracketSize)
+        ctx.stroke()
+        
+        // Bottom-left bracket
+        ctx.beginPath()
+        ctx.moveTo(-bracketDist + bracketSize, bracketDist)
+        ctx.lineTo(-bracketDist, bracketDist)
+        ctx.lineTo(-bracketDist, bracketDist - bracketSize)
+        ctx.stroke()
+        
+        // Bottom-right bracket
+        ctx.beginPath()
+        ctx.moveTo(bracketDist - bracketSize, bracketDist)
+        ctx.lineTo(bracketDist, bracketDist)
+        ctx.lineTo(bracketDist, bracketDist - bracketSize)
+        ctx.stroke()
+        
+        // Center crosshair (tiny dot and four tick marks)
+        ctx.beginPath()
+        ctx.arc(0, 0, 2, 0, Math.PI * 2)
+        ctx.fillStyle = '#c41e1e'
+        ctx.fill()
+        
+        ctx.strokeStyle = 'rgba(196, 30, 30, 0.6)'
+        ctx.lineWidth = 1
+        
+        ctx.beginPath()
+        ctx.moveTo(-15, 0); ctx.lineTo(-8, 0)
+        ctx.moveTo(15, 0); ctx.lineTo(8, 0)
+        ctx.moveTo(0, -15); ctx.lineTo(0, -8)
+        ctx.moveTo(0, 15); ctx.lineTo(0, 8)
+        ctx.stroke()
+        
+        ctx.restore()
+      }
+
       animIdRef.current = requestAnimationFrame(animate)
     }
     animIdRef.current = requestAnimationFrame(animate)
@@ -168,11 +262,48 @@ export default function TopicGeneration({ language, level, mode, topic, onReady 
     <div className="screen topic-screen">
       <canvas ref={canvasRef} />
       
+      {phase !== 'reveal' && (
+        <div className="topic__pre-reveal">
+          <div className="topic__status-text">
+            {phase === 'search' ? (
+              mode === 'nightmare' ? 'DIALING UP CHAOS...' : 'CHOOSING A PROMPT...'
+            ) : (
+              'TOPIC LOCKED'
+            )}
+          </div>
+          <div className="topic__sub-status">
+            {phase === 'search' ? (
+              mode === 'nightmare' ? 'BRACING FOR ABSURDITY' : 'PREPARING YOUR SPEAKER CHALLENGE'
+            ) : (
+              'PREPARE TO SPEAK'
+            )}
+          </div>
+        </div>
+      )}
+
       {phase === 'reveal' && topic && !showMicError && (
         <div className="topic__content">
-          <p className="topic__text">{topic}</p>
+          <div className="topic__text">
+            {topic.includes('\n') ? (
+              <>
+                <span className="topic__text-main">{topic.split('\n')[0]}</span>
+                <span className="topic__text-sub">{topic.split('\n')[1]}</span>
+              </>
+            ) : (
+              <span className="topic__text-main">{topic}</span>
+            )}
+          </div>
           <p className="topic__countdown">You have {countdown} seconds to think.</p>
-          <span className="topic__countdown-number">{countdown}</span>
+          <div className="topic__timer-circle">
+            <svg className="topic__timer-svg" viewBox="0 0 100 100">
+              <circle cx="50" cy="50" r="40" className="topic__timer-track" />
+              <circle cx="50" cy="50" r="40" className="topic__timer-bar" style={{
+                strokeDasharray: 251.2,
+                strokeDashoffset: 251.2 - (251.2 * countdown) / 5
+              }} />
+            </svg>
+            <span className="topic__countdown-number">{countdown}</span>
+          </div>
         </div>
       )}
 

@@ -31,6 +31,7 @@ export default function Recording({ topic, language, onDone }) {
   const initialCounts = initialFillerList.reduce((acc, w) => ({ ...acc, [w]: 0 }), {})
 
   const [seconds, setSeconds] = useState(0)
+  const [micError, setMicError] = useState(null)
   const [transcript, setTranscript] = useState('')
   const [lines, setLines] = useState([])
   const [bars, setBars] = useState(() => Array(BAR_COUNT).fill(4))
@@ -45,6 +46,7 @@ export default function Recording({ topic, language, onDone }) {
   const intervalRef = useRef(null)
   const waveIntervalRef = useRef(null)
   const finalTranscriptRef = useRef('')
+  const lastInterimRef = useRef('')
   const fillerCountsRef = useRef(initialCounts)
   const stoppedRef = useRef(false)
 
@@ -113,14 +115,10 @@ export default function Recording({ topic, language, onDone }) {
         const mediaRecorder = new MediaRecorder(streamRef.current, { mimeType: 'audio/webm' })
         mediaRecorderRef.current = mediaRecorder
 
-        const params = new URLSearchParams({
-          model: 'nova-2', language: codeToUse, filler_words: 'true',
-          punctuate: 'true', interim_results: 'true', utterance_end_ms: '1000'
-        })
-
+        const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://localhost:3002' : '');
+        const proxyBase = API_URL.replace(/^http/, 'ws')
         const socket = new WebSocket(
-          `wss://api.deepgram.com/v1/listen?${params}`,
-          ['token', import.meta.env.VITE_DEEPGRAM_API_KEY]
+          `${proxyBase}/stream?lang=${codeToUse}&model=nova-2`
         )
         socketRef.current = socket
 
@@ -153,7 +151,12 @@ export default function Recording({ topic, language, onDone }) {
           if (data.channel && data.channel.alternatives && data.channel.alternatives.length > 0) {
             const transcriptChunk = data.channel.alternatives[0].transcript
             const isFinal = data.is_final
+            if (transcriptChunk) {
+              // Always track latest interim as backup in case DG closes before sending final
+              lastInterimRef.current = transcriptChunk
+            }
             if (isFinal && transcriptChunk) {
+              lastInterimRef.current = '' // clear — captured in final
               const currentCounts = { ...fillerCountsRef.current }
               let countsChanged = false
               const activeLangCode = isFallback ? 'en' : codeToUse
@@ -177,7 +180,10 @@ export default function Recording({ topic, language, onDone }) {
             setLines(buildLines(fullText))
           }
         }
-      } catch (err) { console.error('Mic Error:', err) }
+      } catch (err) {
+        console.error('Mic Error:', err)
+        setMicError(err.message || 'Microphone access denied or device not found.')
+      }
     }
 
     initDeepgram(initialLangCode)
@@ -189,6 +195,7 @@ export default function Recording({ topic, language, onDone }) {
       if (mediaRecorderRef.current?.state !== 'inactive') mediaRecorderRef.current?.stop()
       socketRef.current?.close()
       streamRef.current?.getTracks().forEach(t => t.stop())
+      streamRef.current = null // allow remount to get fresh mic access
     }
   }, [initialLangCode, buildLines])
 
@@ -203,11 +210,17 @@ export default function Recording({ topic, language, onDone }) {
     socketRef.current?.close()
     streamRef.current?.getTracks().forEach(t => t.stop())
 
-    const finalText = finalTranscriptRef.current.trim() || transcript || '[No speech detected]'
-    if (!hasSubmitted) {
-      setHasSubmitted(true)
-      onDone(finalText, fillerCountsRef.current)
-    }
+    // Wait 800ms for Deepgram to flush any in-flight final transcript for the last utterance
+    setTimeout(() => {
+      const best = finalTranscriptRef.current.trim()
+        || (finalTranscriptRef.current.trim() + ' ' + lastInterimRef.current).trim()
+        || transcript
+        || '[No speech detected]'
+      if (!hasSubmitted) {
+        setHasSubmitted(true)
+        onDone(best, fillerCountsRef.current)
+      }
+    }, 800)
   }, [transcript, onDone, hasSubmitted])
 
   useEffect(() => {
@@ -230,6 +243,19 @@ export default function Recording({ topic, language, onDone }) {
     window.history.back()
   }
 
+  if (micError) {
+    return (
+      <div className="rec rec--error" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', padding: '2rem', textAlign: 'center' }}>
+        <h2 style={{ fontSize: '24px', fontWeight: 'bold', marginBottom: '16px' }}>Microphone Error</h2>
+        <div style={{ background: '#ffeeee', color: '#cc0000', padding: '16px', borderRadius: '8px', marginBottom: '24px', maxWidth: '400px' }}>
+          <p>{micError}</p>
+          <p style={{ marginTop: '10px', fontSize: '14px' }}>Please ensure your browser has permission to use the microphone and that a device is connected.</p>
+        </div>
+        <button className="btn btn--solid" onClick={() => window.location.href = '/'}>GO BACK</button>
+      </div>
+    )
+  }
+
   return (
     <div className="rec">
       {tabWarning && (
@@ -242,7 +268,16 @@ export default function Recording({ topic, language, onDone }) {
 
 
       <div className="rec__top-info">
-        <div className="rec__topic">{topic}</div>
+        <div className="rec__topic">
+          {topic && topic.includes('\n') ? (
+            <>
+              <span className="rec__topic-main">{topic.split('\n')[0]}</span>
+              <span className="rec__topic-sub">{topic.split('\n')[1]}</span>
+            </>
+          ) : (
+            <span className="rec__topic-main">{topic}</span>
+          )}
+        </div>
         {fallbackError && <div className="rec__err-msg">English fallback active</div>}
       </div>
 

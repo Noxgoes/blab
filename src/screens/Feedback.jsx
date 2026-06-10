@@ -667,6 +667,7 @@ export default function Feedback({ language, level, topic, transcript, fillerCou
     <div className="fbc-deck">
       <div className="fbc-deck__header">
         <span className="fbc-deck__counter">{cardIndex + 1} / {TOTAL_CARDS}</span>
+        <button className="fbc-deck__close" onClick={onRestart} style={{ background: 'none', border: 'none', color: '#1a1a1a', fontSize: '28px', cursor: 'pointer', padding: '0 10px', marginLeft: 'auto', display: 'flex', alignItems: 'center' }}>×</button>
       </div>
 
       <div className="fbc-deck__layout">
@@ -685,7 +686,7 @@ export default function Feedback({ language, level, topic, transcript, fillerCou
         <div className="fbc-deck__dots">
           {cards.map((_, i) => <button key={i} className={`fbc-deck__dot ${i === cardIndex ? 'fbc-deck__dot--active' : ''}`} onClick={() => setCardIndex(i)} />)}
         </div>
-        {cardIndex < TOTAL_CARDS - 1 ? <button className="fbc-deck__arrow" onClick={goNext}>→</button> : <button className="fbc-deck__arrow fbc-deck__arrow--restart" onClick={onRestart}>↺</button>}
+        <button className="fbc-deck__arrow" onClick={goNext} disabled={cardIndex === TOTAL_CARDS - 1}>→</button>
       </div>
 
       {showModalIdCard && (

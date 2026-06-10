@@ -137,7 +137,7 @@ export default function App() {
   // ── SESSION STATE ───────────────────────────────────────────────────
   const loadSessionState = (key, defaultVal) => {
     try {
-      const stored = sessionStorage.getItem(`blab_${key}`)
+      const stored = localStorage.getItem(`blab_${key}`)
       return stored ? JSON.parse(stored) : defaultVal
     } catch {
       return defaultVal
@@ -153,13 +153,13 @@ export default function App() {
   const [feedbackData, setFeedbackData] = useState(() => loadSessionState('feedbackData', null))
 
   useEffect(() => {
-    sessionStorage.setItem('blab_language', JSON.stringify(language))
-    sessionStorage.setItem('blab_level', JSON.stringify(level))
-    sessionStorage.setItem('blab_mode', JSON.stringify(mode))
-    sessionStorage.setItem('blab_topic', JSON.stringify(topic))
-    sessionStorage.setItem('blab_transcript', JSON.stringify(transcript))
-    sessionStorage.setItem('blab_fillerCounts', JSON.stringify(fillerCounts))
-    sessionStorage.setItem('blab_feedbackData', JSON.stringify(feedbackData))
+    localStorage.setItem('blab_language', JSON.stringify(language))
+    localStorage.setItem('blab_level', JSON.stringify(level))
+    localStorage.setItem('blab_mode', JSON.stringify(mode))
+    localStorage.setItem('blab_topic', JSON.stringify(topic))
+    localStorage.setItem('blab_transcript', JSON.stringify(transcript))
+    localStorage.setItem('blab_fillerCounts', JSON.stringify(fillerCounts))
+    localStorage.setItem('blab_feedbackData', JSON.stringify(feedbackData))
   }, [language, level, mode, topic, transcript, fillerCounts, feedbackData])
 
   // ── BROWSER HISTORY / PERSISTENCE ───────────────────────────────────

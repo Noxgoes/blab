@@ -1,10 +1,8 @@
-import { useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 
 export default function GlobalNav({ onStart, isAnalyzing, user, userData, onOpenAuth, onOpenAccount }) {
   const navigate = useNavigate()
   const location = useLocation()
-  const [isMenuOpen, setIsMenuOpen] = useState(false)
 
   const isSessionFlow = ['/setup', '/topic', '/recording', '/feedback'].includes(location.pathname)
 
@@ -51,56 +49,36 @@ export default function GlobalNav({ onStart, isAnalyzing, user, userData, onOpen
           )}
         </div>
 
+        {/* Mobile-only compact horizontal links row */}
+        {!isSessionFlow && (
+          <div className="lp-nav__links-mobile">
+            <button className="lp-nav__link-mobile" onClick={() => navigate('/about')}>ABOUT</button>
+            <button className="lp-nav__link-mobile" onClick={() => navigate('/leaderboard')}>RANKS</button>
+            <button className="lp-nav__link-mobile" onClick={() => navigate('/contact')}>CONTACT</button>
+            {user ? (
+              <button className="lp-nav__link-mobile lp-nav__link-mobile--auth" onClick={onOpenAccount}>
+                {(user.user_metadata?.username || 'ACCOUNT').toUpperCase().slice(0, 7)}
+              </button>
+            ) : (
+              <button className="lp-nav__link-mobile lp-nav__link-mobile--auth" onClick={onOpenAuth}>
+                SIGN IN
+              </button>
+            )}
+          </div>
+        )}
+
         <div className="lp-nav__actions">
           {isSessionFlow ? (
             <button className="lp-nav__cta lp-nav__cta--pill lp-nav__cta--quit" onClick={handleQuit}>
               {quitLabel} <span className="lp-nav__cta-arrow">{quitArrow}</span>
             </button>
           ) : (
-            <>
-              <button className="lp-nav__cta lp-nav__cta--pill" onClick={onStart}>
-                SPEAK <span className="lp-nav__cta-arrow">↗</span>
-              </button>
-              <button className="lp-nav__menu-toggle" onClick={() => setIsMenuOpen(true)} aria-label="Open Menu">
-                <span className="lp-nav__menu-bar" />
-                <span className="lp-nav__menu-bar" />
-                <span className="lp-nav__menu-bar" />
-              </button>
-            </>
+            <button className="lp-nav__cta lp-nav__cta--pill" onClick={onStart}>
+              SPEAK <span className="lp-nav__cta-arrow">↗</span>
+            </button>
           )}
         </div>
       </nav>
-
-      {/* Mobile-only menu drawer overlay */}
-      {!isSessionFlow && (
-        <div className={`lp-nav__drawer ${isMenuOpen ? 'lp-nav__drawer--open' : ''}`}>
-          <div className="lp-nav__drawer-header">
-            <div className="lp-nav__left" onClick={() => { setIsMenuOpen(false); navigate('/'); }} style={{ cursor: 'pointer' }}>
-              <span className="lp-nav__logo">BLAB</span>
-              <img src="/images/tongue.png" alt="" className="lp-nav__logo-icon" />
-              <sup className="lp-nav__tm">™</sup>
-            </div>
-            <button className="lp-nav__drawer-close" onClick={() => setIsMenuOpen(false)} aria-label="Close Menu">
-              ✕
-            </button>
-          </div>
-          <div className="lp-nav__drawer-links">
-            <button className="lp-nav__drawer-link" onClick={() => { setIsMenuOpen(false); navigate('/'); }}>HOME</button>
-            <button className="lp-nav__drawer-link" onClick={() => { setIsMenuOpen(false); navigate('/about'); }}>ABOUT</button>
-            <button className="lp-nav__drawer-link" onClick={() => { setIsMenuOpen(false); navigate('/leaderboard'); }}>RANKS</button>
-            <button className="lp-nav__drawer-link" onClick={() => { setIsMenuOpen(false); navigate('/contact'); }}>CONTACT</button>
-            {user ? (
-              <button className="lp-nav__drawer-link lp-nav__drawer-link--auth" onClick={() => { setIsMenuOpen(false); onOpenAccount(); }}>
-                {user.user_metadata?.username?.toUpperCase() || 'ACCOUNT'}
-              </button>
-            ) : (
-              <button className="lp-nav__drawer-link lp-nav__drawer-link--auth" onClick={() => { setIsMenuOpen(false); onOpenAuth(); }}>
-                SIGN IN
-              </button>
-            )}
-          </div>
-        </div>
-      )}
     </>
   )
 }

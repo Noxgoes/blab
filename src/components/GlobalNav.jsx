@@ -74,7 +74,7 @@ export default function GlobalNav({ onStart, isAnalyzing, user, userData, onOpen
             </button>
           ) : (
             <button className="lp-nav__cta lp-nav__cta--pill lp-nav__cta--speak" onClick={onStart}>
-              SPEAK <span className="lp-nav__cta-arrow">↗</span>
+              BEGIN SPEAKING <span className="lp-nav__cta-arrow">↗</span>
             </button>
           )}
         </div>

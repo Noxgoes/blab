@@ -112,7 +112,7 @@ export default function Recording({ topic, language, onDone }) {
           }, 1000)
         }
 
-        const mediaRecorder = new MediaRecorder(streamRef.current, { mimeType: 'audio/webm' })
+        const mediaRecorder = new MediaRecorder(streamRef.current)
         mediaRecorderRef.current = mediaRecorder
 
         const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://localhost:3002' : '');
@@ -123,19 +123,19 @@ export default function Recording({ topic, language, onDone }) {
         socketRef.current = socket
 
         mediaRecorder.ondataavailable = (e) => {
-          if (e.data.size > 0) {
-            if (socket.readyState === WebSocket.OPEN) {
-              socket.send(e.data)
-            } else if (socket.readyState === WebSocket.CONNECTING) {
-              audioQueue.push(e.data)
-            }
+          if (e.data.size > 0 && socket.readyState === WebSocket.OPEN) {
+            socket.send(e.data)
           }
         }
-        mediaRecorder.start(250)
 
         socket.onopen = () => {
           if (isCancelled) { socket.close(); return }
-          while (audioQueue.length > 0) socket.send(audioQueue.shift())
+          // Tiny delay to let hardware mic warm up after permissions are granted
+          setTimeout(() => {
+            if (!isCancelled && mediaRecorder.state === 'inactive') {
+              mediaRecorder.start(250)
+            }
+          }, 300)
         }
 
         socket.onerror = (err) => {

@@ -504,12 +504,14 @@
   .lp-nav__logo { font-size: 1.35rem; }
   .lp-nav__cta { padding: 0.5rem 1rem; font-size: 0.65rem; }
   .lp-hero__left { gap: 1rem; }
-  .lp-hero__title { font-size: 2rem; }
-  .lp-hero__sub { font-size: 0.8rem; max-width: 280px; }
-  .lp-hero__right { min-height: 25vh; }
-  .lp-hero__tongue-wrap { width: 150px; height: 200px; }
-  .lp-stats { gap: 1rem; padding: 1rem; }
-  .lp-stats__item { flex: 1 1 45%; text-align: center; flex-direction: column; gap: 0.2rem; }
+  .lp-hero__title { font-size: 2.2rem; }
+  .lp-hero__sub { font-size: 0.8rem; max-width: 280px; margin: 0 auto; }
+  .lp-hero__right { height: 220px; min-height: 220px; padding: 0; margin-top: 1rem; overflow: hidden; }
+  .lp-hero__tongue-wrap { width: 120px; height: 160px; margin: 0 auto; }
+  .lp-hero__orbit { width: 200px; height: 200px; }
+  .lp-stats { gap: 1rem; padding: 1rem; display: grid; grid-template-columns: 1fr 1fr; }
+  .lp-stats__item { flex: none; min-width: 0; text-align: center; flex-direction: column; gap: 0.2rem; justify-content: center; }
+  .lp-stats__item:last-child { grid-column: 1 / -1; }
   .lp-stats__big { font-size: 1.5rem; }
   .lp-stats__value { justify-content: center; }
 }

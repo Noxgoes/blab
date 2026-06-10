@@ -730,7 +730,15 @@ export default function Feedback({ language, level, topic, transcript, fillerCou
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10, width: '100%', marginTop: 8 }}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, width: '100%' }}>
             <button className="fbc__copy-btn" onClick={handleDownloadPNG} style={{ margin: 0, width: '100%' }}>{copied ? 'DOWNLOADING...' : 'DOWNLOAD PNG'}</button>
-            <button className="fbc__copy-btn" onClick={handleShareX} style={{ margin: 0, width: '100%' }}>SHARE ON X</button>
+            <a 
+              className="fbc__copy-btn" 
+              href={`https://x.com/intent/tweet?text=${encodeURIComponent(`I scored ${Math.round(data?.score ?? 0)} on BLAB and identified as a "${getArchetype(data)?.title ?? 'Speaker'}" speaking type. Rate my fluency. Try it here: https://blab.app`)}`}
+              target="_blank" 
+              rel="noopener noreferrer"
+              style={{ margin: 0, width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none' }}
+            >
+              SHARE ON X
+            </a>
           </div>
           <button className="fbc__copy-btn fbc__copy-btn--ghost" onClick={onRestart} style={{ margin: 0, width: '100%' }}>SPEAK AGAIN</button>
         </div>

@@ -7305,7 +7305,21 @@ h3,
     display: none !important;
   }
   .fbc__char-img-wrap {
-    height: 150px !important;
+    height: 220px !important;
+  }
+  .fbc__char-img-overlay {
+    opacity: 1 !important;
+    background: rgba(0, 0, 0, 0.78) !important;
+    pointer-events: auto !important;
+    padding: 16px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+  .fbc__char-backstory {
+    font-size: 11px !important;
+    line-height: 1.45 !important;
+    color: #F2EDE4 !important;
   }
   .fbc__char-name {
     font-size: 1.8rem !important;
@@ -7322,8 +7336,10 @@ h3,
   
   /* Speaker ID Card Sizing (sc3) */
   .sc3 {
-    padding: 16px !important;
-    max-width: 310px !important;
+    padding: 24px 20px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
   }
   .sc3__id-photo-wrap {
     width: 70px !important;

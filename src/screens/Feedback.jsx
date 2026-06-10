@@ -418,12 +418,40 @@ export default function Feedback({ language, level, topic, transcript, fillerCou
     }
   }
 
-  const handleShareX = () => {
+  const handleShareX = async () => {
     const scoreVal = Math.round(data?.score ?? 0)
     const type = getArchetype(data)?.title ?? 'Speaker'
-    const tweetText = `I scored ${scoreVal} on BLAB and identified as a "${type}" speaking type. Rate my fluency. Try it here: https://blab.app`
-    const url = `https://x.com/intent/tweet?text=${encodeURIComponent(tweetText)}`
-    window.open(url, '_blank', 'noopener,noreferrer')
+    const tweetText = `I scored ${scoreVal} on BLAB and identified as a "${type}" speaking type. Rate my fluency. Try it here: https://heyblab.vercel.app`
+    
+    if (shareRef.current && navigator.share && navigator.canShare) {
+      try {
+        const canvas = await html2canvas(shareRef.current, { scale: 2, backgroundColor: '#F2EDE4', useCORS: true, logging: false })
+        canvas.toBlob(async (blob) => {
+          if (!blob) {
+            window.open(`https://x.com/intent/tweet?text=${encodeURIComponent(tweetText)}`, '_blank', 'noopener,noreferrer')
+            return
+          }
+          const file = new File([blob], 'blab-card.png', { type: 'image/png' })
+          if (navigator.canShare({ files: [file] })) {
+            try {
+              await navigator.share({
+                files: [file],
+                text: tweetText,
+              })
+            } catch (shareErr) {
+              window.open(`https://x.com/intent/tweet?text=${encodeURIComponent(tweetText)}`, '_blank', 'noopener,noreferrer')
+            }
+          } else {
+            window.open(`https://x.com/intent/tweet?text=${encodeURIComponent(tweetText)}`, '_blank', 'noopener,noreferrer')
+          }
+        }, 'image/png')
+        return
+      } catch (err) {
+        console.error('Web Share failed, falling back to Web Intent:', err)
+      }
+    }
+    
+    window.open(`https://x.com/intent/tweet?text=${encodeURIComponent(tweetText)}`, '_blank', 'noopener,noreferrer')
   }
 
   const generateLocalData = (errorMsg) => {
@@ -730,15 +758,13 @@ export default function Feedback({ language, level, topic, transcript, fillerCou
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10, width: '100%', marginTop: 8 }}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, width: '100%' }}>
             <button className="fbc__copy-btn" onClick={handleDownloadPNG} style={{ margin: 0, width: '100%' }}>{copied ? 'DOWNLOADING...' : 'DOWNLOAD PNG'}</button>
-            <a 
+            <button 
               className="fbc__copy-btn" 
-              href={`https://x.com/intent/tweet?text=${encodeURIComponent(`I scored ${Math.round(data?.score ?? 0)} on BLAB and identified as a "${getArchetype(data)?.title ?? 'Speaker'}" speaking type. Rate my fluency. Try it here: https://blab.app`)}`}
-              target="_blank" 
-              rel="noopener noreferrer"
-              style={{ margin: 0, width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none' }}
+              onClick={handleShareX}
+              style={{ margin: 0, width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
             >
               SHARE ON X
-            </a>
+            </button>
           </div>
           <button className="fbc__copy-btn fbc__copy-btn--ghost" onClick={onRestart} style={{ margin: 0, width: '100%' }}>SPEAK AGAIN</button>
         </div>

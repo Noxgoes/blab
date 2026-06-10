@@ -14,10 +14,10 @@ const FILLER_ANNOTATIONS = [
 ]
 
 const MOBILE_ANNOTATIONS = [
-  { text: 'uhh...', label: 'FILLER', top: '8%', left: '2%' },
-  { text: 'like...', label: 'FILLER', bottom: '8%', left: '2%' },
-  { text: 'hmm...', label: 'PAUSE', top: '8%', right: '2%' },
-  { text: 'I mean...', label: 'FILLER', bottom: '8%', right: '2%' },
+  { text: 'uhh...', label: 'FILLER', top: 'calc(50% - 64px)', right: 'calc(50% + 45px)', left: 'auto', bottom: 'auto' },
+  { text: 'like...', label: 'FILLER', top: 'calc(50% + 34px)', right: 'calc(50% + 45px)', left: 'auto', bottom: 'auto' },
+  { text: 'hmm...', label: 'PAUSE', top: 'calc(50% - 64px)', left: 'calc(50% + 45px)', right: 'auto', bottom: 'auto' },
+  { text: 'I mean...', label: 'FILLER', top: 'calc(50% + 34px)', left: 'calc(50% + 45px)', right: 'auto', bottom: 'auto' },
 ]
 
 const TICKER_ITEMS = [

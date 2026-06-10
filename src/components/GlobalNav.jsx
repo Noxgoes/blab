@@ -25,6 +25,25 @@ export default function GlobalNav({ onStart, isAnalyzing, user, userData, onOpen
 
   return (
     <>
+      {/* Mobile-only second row of links — always visible, no JS needed */}
+      {!isSessionFlow && (
+        <div className="lp-nav__mobile-bar">
+          <button className="lp-nav__mobile-link" onClick={() => navigate('/')}>HOME</button>
+          <button className="lp-nav__mobile-link" onClick={() => navigate('/about')}>ABOUT</button>
+          <button className="lp-nav__mobile-link" onClick={() => navigate('/leaderboard')}>RANKS</button>
+          <button className="lp-nav__mobile-link" onClick={() => navigate('/contact')}>CONTACT</button>
+          {user ? (
+            <button className="lp-nav__mobile-link lp-nav__mobile-link--auth" onClick={onOpenAccount}>
+              {(user.user_metadata?.username || 'ACCOUNT').toUpperCase().slice(0, 8)}
+            </button>
+          ) : (
+            <button className="lp-nav__mobile-link lp-nav__mobile-link--auth" onClick={onOpenAuth}>
+              SIGN IN
+            </button>
+          )}
+        </div>
+      )}
+
       <nav className="lp-nav lp-nav--global">
         <div className="lp-nav__left" onClick={() => navigate('/')} style={{ cursor: 'pointer' }}>
           <span className="lp-nav__logo">BLAB</span>
@@ -67,25 +86,6 @@ export default function GlobalNav({ onStart, isAnalyzing, user, userData, onOpen
           )}
         </div>
       </nav>
-
-      {/* Mobile-only second row of links — always visible, no JS needed */}
-      {!isSessionFlow && (
-        <div className="lp-nav__mobile-bar">
-          <button className="lp-nav__mobile-link" onClick={() => navigate('/')}>HOME</button>
-          <button className="lp-nav__mobile-link" onClick={() => navigate('/about')}>ABOUT</button>
-          <button className="lp-nav__mobile-link" onClick={() => navigate('/leaderboard')}>RANKS</button>
-          <button className="lp-nav__mobile-link" onClick={() => navigate('/contact')}>CONTACT</button>
-          {user ? (
-            <button className="lp-nav__mobile-link lp-nav__mobile-link--auth" onClick={onOpenAccount}>
-              {(user.user_metadata?.username || 'ACCOUNT').toUpperCase().slice(0, 8)}
-            </button>
-          ) : (
-            <button className="lp-nav__mobile-link lp-nav__mobile-link--auth" onClick={onOpenAuth}>
-              SIGN IN
-            </button>
-          )}
-        </div>
-      )}
     </>
   )
 }

@@ -13,6 +13,13 @@ const FILLER_ANNOTATIONS = [
   { text: 'you hesitated too long.', label: 'TOO MUCH HESITATION', bottom: '18%', right: '14%' },
 ]
 
+const MOBILE_ANNOTATIONS = [
+  { text: 'uhh...', label: 'FILLER', top: '8%', left: '2%' },
+  { text: 'like...', label: 'FILLER', bottom: '8%', left: '2%' },
+  { text: 'hmm...', label: 'PAUSE', top: '8%', right: '2%' },
+  { text: 'I mean...', label: 'FILLER', bottom: '8%', right: '2%' },
+]
+
 const TICKER_ITEMS = [
   'Thought faster than you spoke.',
   'You used 6 filler words.',

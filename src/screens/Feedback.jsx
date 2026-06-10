@@ -177,8 +177,24 @@ export default function Feedback({ language, level, topic, transcript, fillerCou
     "You successfully confused the AI. That's technically a feature, not a bug.",
     "Your filler words did all the heavy lifting. The actual words took a vacation."
   ]
+  const negativeRoasts = [
+    "The AI couldn't find a specific place you fell apart. You just never came together.",
+    "Honestly, it's hard to pinpoint where you fell apart because the whole thing was a bit of a structural collapse.",
+    "We'd love to list your specific mistakes here, but the AI gave up halfway through analyzing them.",
+    "Your sentences were like a modern art piece: chaotic, unstructured, and deeply confusing.",
+    "If butchering a language was a crime, this transcript would be a full confession."
+  ]
+  const rewriteRoasts = [
+    "You didn't really say anything coherent enough for me to rewrite.",
+    "I tried rewriting this, but it felt like trying to un-burn toast.",
+    "Some things are better left unsaid. And un-rewritten.",
+    "To rewrite this, I'd have to figure out what you were trying to say first.",
+    "Error 404: Coherent thought not found."
+  ]
   const roastIndex = (topic ? topic.length : 0) % lightRoasts.length
   const selectedRoast = lightRoasts[roastIndex]
+  const selectedNegativeRoast = negativeRoasts[roastIndex]
+  const selectedRewriteRoast = rewriteRoasts[roastIndex]
   
   useEffect(() => {
     const saved = localStorage.getItem('blabUsername')
@@ -586,7 +602,16 @@ export default function Feedback({ language, level, topic, transcript, fillerCou
         </div>
         <div className="fbc__split-divider" /><div className="fbc__split-half fbc__split-half--bottom">
           <div className="fbc__eyebrow" style={{ color: '#cc2b2b' }}>× WHERE YOU FELL APART</div>
-          {(data.where_you_fell_apart || []).slice(0, 4).map((w, i) => <div className="fbc__list-item" key={i}><span className="fbc__icon fbc__icon--bad">×</span><p className="fbc__list-text">{w}</p></div>)}
+          {data.where_you_fell_apart && data.where_you_fell_apart.length > 0 ? (
+            data.where_you_fell_apart.slice(0, 4).map((w, i) => <div className="fbc__list-item" key={i}><span className="fbc__icon fbc__icon--bad">×</span><p className="fbc__list-text">{w}</p></div>)
+          ) : (
+            <div className="fbc__list-item" style={{ display: 'flex', alignItems: 'center' }}>
+              <span className="fbc__icon fbc__icon--roast" style={{ fontSize: '15px' }}>💀</span>
+              <p className="fbc__list-text" style={{ fontStyle: 'italic', color: '#cc2b2b' }}>
+                "{selectedNegativeRoast}"
+              </p>
+            </div>
+          )}
         </div>
       </div>
     </div>,
@@ -602,7 +627,7 @@ export default function Feedback({ language, level, topic, transcript, fillerCou
     <div className="fbc fbc--red" key="rewrite">
       <div className="fbc__inner">
         <div className="fbc__eyebrow fbc__eyebrow--white">THE SENTENCE YOU SHOULD HAVE SAID</div>
-        <div className="fbc__rewrite-quote">"{data.rewrite || '...'}"</div>
+        <div className="fbc__rewrite-quote">"{data.rewrite && data.rewrite.trim() !== '' && data.rewrite !== '...' ? data.rewrite : selectedRewriteRoast}"</div>
         {data.native_comparison && (
           <><div className="fbc__divider fbc__divider--white" /><div className="fbc__eyebrow fbc__eyebrow--white" style={{ opacity: 0.6, marginBottom: 12 }}>NATIVE COMPARISON</div><p className="fbc__native-text">{data.native_comparison}</p></>
         )}

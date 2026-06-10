@@ -20,7 +20,7 @@ app.use(cors({
       'https://blab.app',
       'https://blab-speech.vercel.app'
     ];
-    if (allowedOrigins.includes(origin)) {
+    if (allowedOrigins.includes(origin) || origin.endsWith('.vercel.app')) {
       callback(null, true);
     } else {
       callback(new Error('Blocked by CORS policy'));

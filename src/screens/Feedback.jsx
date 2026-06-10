@@ -696,27 +696,27 @@ export default function Feedback({ language, level, topic, transcript, fillerCou
               {user ? (
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, width: '100%' }}>
                   <p style={{ fontFamily: 'var(--font-mono)', fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#1a1a1a', opacity: 0.8, margin: 0 }}>Post score as <span style={{ fontWeight: 700 }}>{enteredName}</span>?</p>
-                  <button className="fbc__save-btn fbc__save-btn--solid" onClick={handleSaveScore} disabled={saveStep === 'submitting'} style={{ width: '100%', borderRadius: 6 }}>
-                    {saveStep === 'submitting' ? 'POSTING...' : 'POST SCORE'}
+                  <button className="fbc__save-btn fbc__save-btn--solid" onClick={handleSaveScore} disabled={saveStep === 'submitting'} style={{ width: '100%', borderRadius: 2 }}>
+                    {saveStep === 'submitting' ? 'POSTING...' : 'POST TO LEADERBOARD'}
                   </button>
                 </div>
               ) : (
                 <>
-                  <div className={`fbc__save-row ${shake ? 'fbc__save-row--shake' : ''}`}>
+                  <div className={`fbc__save-row ${shake ? 'fbc__save-row--shake' : ''}`} style={{ display: 'flex', flexDirection: 'column', width: '100%', gap: 10 }}>
                     <input ref={inputRef} className="fbc__save-input" type="text" placeholder="Your name" value={enteredName} 
                       onChange={e => { setEnteredName(e.target.value.slice(0, 20)); setNameError(null); setIsWelcomeBack(false); }} disabled={saveStep === 'submitting'}
-                      onKeyDown={e => e.key === 'Enter' && handleSaveScore()} />
-                    <button className="fbc__save-btn fbc__save-btn--solid" onClick={handleSaveScore} disabled={saveStep === 'submitting' || !enteredName.trim()}>
-                      {saveStep === 'submitting' ? '...' : 'ADD ME'}
+                      onKeyDown={e => e.key === 'Enter' && handleSaveScore()} style={{ width: '100%', padding: '12px 14px', fontSize: '13px' }} />
+                    <button className="fbc__save-btn fbc__save-btn--solid" onClick={handleSaveScore} disabled={saveStep === 'submitting' || !enteredName.trim()} style={{ width: '100%', padding: '12px', fontSize: '11px' }}>
+                      {saveStep === 'submitting' ? 'POSTING...' : 'POST TO LEADERBOARD'}
                     </button>
                   </div>
                   
                   {isWelcomeBack && !nameError && (
-                    <p className="fbc__welcome-back">Welcome back, {enteredName}.</p>
+                    <p className="fbc__welcome-back" style={{ marginTop: 4 }}>Welcome back, {enteredName}.</p>
                   )}
 
                   {nameError === 'taken' && (
-                    <div className="fbc__name-error">
+                    <div className="fbc__name-error" style={{ marginTop: 8 }}>
                       <p className="fbc__error-main">That name is taken by someone else.</p>
                       <p className="fbc__error-sub">Try a different name.</p>
                       <p className="fbc__error-hint">Is this your name? Try adding a number: {enteredName}2</p>
@@ -727,10 +727,12 @@ export default function Feedback({ language, level, topic, transcript, fillerCou
             </div>
           ) : <p className="fbc__save-label">+{data.xp || 0} XP earned</p>)}
         </div>
-        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', justifyContent: 'center' }}>
-          <button className="fbc__copy-btn" onClick={handleDownloadPNG}>{copied ? 'DOWNLOADING...' : 'DOWNLOAD PNG'}</button>
-          <button className="fbc__copy-btn" onClick={handleShareX}>SHARE ON X</button>
-          <button className="fbc__copy-btn fbc__copy-btn--ghost" onClick={onRestart}>SPEAK AGAIN</button>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10, width: '100%', marginTop: 8 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, width: '100%' }}>
+            <button className="fbc__copy-btn" onClick={handleDownloadPNG} style={{ margin: 0, width: '100%' }}>{copied ? 'DOWNLOADING...' : 'DOWNLOAD PNG'}</button>
+            <button className="fbc__copy-btn" onClick={handleShareX} style={{ margin: 0, width: '100%' }}>SHARE ON X</button>
+          </div>
+          <button className="fbc__copy-btn fbc__copy-btn--ghost" onClick={onRestart} style={{ margin: 0, width: '100%' }}>SPEAK AGAIN</button>
         </div>
       </div>
       <div className="sc3" ref={shareRef} title="Double-click to expand" onDoubleClick={() => setShowModalIdCard(true)} style={{ cursor: 'pointer', flexShrink: 0 }}>

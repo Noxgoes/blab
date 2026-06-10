@@ -680,25 +680,36 @@ export default function Feedback({ language, level, topic, transcript, fillerCou
             </div>
           ) : (saveStep === 'prompt' || saveStep === 'submitting' ? (
             <div className="fbc__save-container">
-              <div className={`fbc__save-row ${shake ? 'fbc__save-row--shake' : ''}`}>
-                <input ref={inputRef} className="fbc__save-input" type="text" placeholder="Your name" value={enteredName} 
-                  onChange={e => { setEnteredName(e.target.value.slice(0, 20)); setNameError(null); setIsWelcomeBack(false); }} disabled={saveStep === 'submitting'}
-                  onKeyDown={e => e.key === 'Enter' && handleSaveScore()} />
-                <button className="fbc__save-btn fbc__save-btn--solid" onClick={handleSaveScore} disabled={saveStep === 'submitting' || !enteredName.trim()}>
-                  {saveStep === 'submitting' ? '...' : 'ADD ME'}
-                </button>
-              </div>
-              
-              {isWelcomeBack && !nameError && (
-                <p className="fbc__welcome-back">Welcome back, {enteredName}.</p>
-              )}
-
-              {nameError === 'taken' && (
-                <div className="fbc__name-error">
-                  <p className="fbc__error-main">That name is taken by someone else.</p>
-                  <p className="fbc__error-sub">Try a different name.</p>
-                  <p className="fbc__error-hint">Is this your name? Try adding a number: {enteredName}2</p>
+              {user ? (
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, width: '100%' }}>
+                  <p style={{ fontFamily: 'var(--font-mono)', fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#1a1a1a', opacity: 0.8, margin: 0 }}>Post score as <span style={{ fontWeight: 700 }}>{enteredName}</span>?</p>
+                  <button className="fbc__save-btn fbc__save-btn--solid" onClick={handleSaveScore} disabled={saveStep === 'submitting'} style={{ width: '100%', borderRadius: 6 }}>
+                    {saveStep === 'submitting' ? 'POSTING...' : 'POST SCORE'}
+                  </button>
                 </div>
+              ) : (
+                <>
+                  <div className={`fbc__save-row ${shake ? 'fbc__save-row--shake' : ''}`}>
+                    <input ref={inputRef} className="fbc__save-input" type="text" placeholder="Your name" value={enteredName} 
+                      onChange={e => { setEnteredName(e.target.value.slice(0, 20)); setNameError(null); setIsWelcomeBack(false); }} disabled={saveStep === 'submitting'}
+                      onKeyDown={e => e.key === 'Enter' && handleSaveScore()} />
+                    <button className="fbc__save-btn fbc__save-btn--solid" onClick={handleSaveScore} disabled={saveStep === 'submitting' || !enteredName.trim()}>
+                      {saveStep === 'submitting' ? '...' : 'ADD ME'}
+                    </button>
+                  </div>
+                  
+                  {isWelcomeBack && !nameError && (
+                    <p className="fbc__welcome-back">Welcome back, {enteredName}.</p>
+                  )}
+
+                  {nameError === 'taken' && (
+                    <div className="fbc__name-error">
+                      <p className="fbc__error-main">That name is taken by someone else.</p>
+                      <p className="fbc__error-sub">Try a different name.</p>
+                      <p className="fbc__error-hint">Is this your name? Try adding a number: {enteredName}2</p>
+                    </div>
+                  )}
+                </>
               )}
             </div>
           ) : <p className="fbc__save-label">+{data.xp || 0} XP earned</p>)}

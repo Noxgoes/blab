@@ -191,10 +191,24 @@ export default function Feedback({ language, level, topic, transcript, fillerCou
     "To rewrite this, I'd have to figure out what you were trying to say first.",
     "Error 404: Coherent thought not found."
   ]
+  const frameworkRoasts = [
+    { name: "THE BLANK SLATE", how: "We couldn't find a single framework that could save that structure. Just start from zero next time." },
+    { name: "THE RESET BUTTON", how: "Before applying advanced techniques, you need to master stringing three coherent words together." },
+    { name: "THE EMERGENCY STOP", how: "When you realize you have no idea where your sentence is going, just stop. Silence is better than whatever that was." }
+  ]
+  const focusRoasts = [
+    "Focus on having an actual point before you open your mouth.",
+    "Try completing one single thought before abandoning it for the next.",
+    "Your next focus: mastering the art of the period. Stop your sentences before they bleed to death.",
+    "Next time, decide what you want to say before you start saying it.",
+    "Breathe. You're talking like you're being chased by the alphabet."
+  ]
   const roastIndex = (topic ? topic.length : 0) % lightRoasts.length
   const selectedRoast = lightRoasts[roastIndex]
   const selectedNegativeRoast = negativeRoasts[roastIndex]
   const selectedRewriteRoast = rewriteRoasts[roastIndex]
+  const selectedFrameworkRoast = frameworkRoasts[roastIndex % frameworkRoasts.length]
+  const selectedFocusRoast = focusRoasts[roastIndex % focusRoasts.length]
   
   useEffect(() => {
     const saved = localStorage.getItem('blabUsername')
@@ -637,9 +651,21 @@ export default function Feedback({ language, level, topic, transcript, fillerCou
       <div className="fbc__inner fbc__inner--left" style={{ justifyContent: 'space-between', paddingBottom: 24 }}>
         <div className="fbc__eyebrow">USE THIS NEXT TIME</div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12, width: '100%' }}>
-          {(data.frameworks || []).slice(0, 2).map(f => <div className="fbc__fw-box" key={f.name} style={{ marginTop: 0 }}><div className="fbc__fw-name">{f.name}</div><p className="fbc__fw-how">{f.how}</p></div>)}
+          {data.frameworks && data.frameworks.length > 0 ? (
+            data.frameworks.slice(0, 2).map(f => <div className="fbc__fw-box" key={f.name} style={{ marginTop: 0 }}><div className="fbc__fw-name">{f.name}</div><p className="fbc__fw-how">{f.how}</p></div>)
+          ) : (
+            <div className="fbc__fw-box" style={{ marginTop: 0 }}>
+              <div className="fbc__fw-name" style={{ color: '#cc2b2b' }}>{selectedFrameworkRoast.name}</div>
+              <p className="fbc__fw-how" style={{ fontStyle: 'italic' }}>{selectedFrameworkRoast.how}</p>
+            </div>
+          )}
         </div>
-        <div className="fbc__focus-box" style={{ width: '100%', marginTop: 0 }}><div className="fbc__eyebrow fbc__eyebrow--red" style={{ marginBottom: 10 }}>FOCUS FOR NEXT SESSION</div><p className="fbc__focus-text">{data.next_focus}</p></div>
+        <div className="fbc__focus-box" style={{ width: '100%', marginTop: 0 }}>
+          <div className="fbc__eyebrow fbc__eyebrow--red" style={{ marginBottom: 10 }}>FOCUS FOR NEXT SESSION</div>
+          <p className="fbc__focus-text" style={{ fontStyle: (!data.next_focus || data.next_focus.trim() === '') ? 'italic' : 'normal', opacity: (!data.next_focus || data.next_focus.trim() === '') ? 0.8 : 1 }}>
+            {data.next_focus && data.next_focus.trim() !== '' ? data.next_focus : selectedFocusRoast}
+          </p>
+        </div>
       </div>
     </div>,
     <div className="fbc fbc--cream fbc--share" key="share">

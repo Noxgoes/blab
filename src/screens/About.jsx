@@ -92,8 +92,9 @@ export default function About({ onStart }) {
             SO I BUILT THIS.
           </h1>
           <p className="about__subtitle">
-            Hi, I'm the solo indie dev behind BLAB. This whole project started after I completely bombed a presentation 
-            by stuttering and "uh-ing" my way through 15 slides of absolute silence. There is no backspace for spoken words—so I built a game to fix my mouth.
+            Hi, I'm the solo indie dev behind BLAB. This whole project started after I completely bombed a presentation by stuttering and "uh-ing" my way through 15 slides. 
+            There is no backspace for spoken words—so I built BLAB. It's a gamified speaking coach: you get a random topic, face a 60-second pressure timer, record your voice, 
+            and instantly receive a brutally honest analysis of your filler words, spontaneity, and pacing, mapping you to one of our six distinct speaker archetypes.
           </p>
         </header>
 

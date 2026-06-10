@@ -101,8 +101,7 @@ export default function Landing({ userData, onStart }) {
             <em className="lp-hero__title-accent">doesn't.</em>
           </h1>
           <p className="lp-hero__sub">
-            Random topics. Real pressure.<br />
-            AI feedback that's brutally honest.
+            Random topics. Real pressure. 60 seconds. Brutally honest AI feedback.
           </p>
           <button className="lp-hero__enter" onClick={onStart}>
             BEGIN SPEAKING <span className="lp-hero__enter-arrow">→</span>

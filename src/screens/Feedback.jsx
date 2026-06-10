@@ -29,21 +29,26 @@ const CHARACTERS = {
 
 function getArchetype(data) {
   if (!data || !data.score_breakdown) return CHARACTERS.sparker
+  
   const score = data.score || 0
-  const pauses = data.pauses_inferred || 0
   const confidence = data.score_breakdown?.confidence || 0
   const grammar = data.score_breakdown?.grammar || 0
   const spontaneity = data.score_breakdown?.spontaneity || 0
   const completion = data.score_breakdown?.completion || 0
   const fillers = data.filler_breakdown?.total || 0
+  const fillerPenalty = data.score_breakdown?.filler_penalty || 0
 
-  if (score >= 85) return CHARACTERS.ghost
-  if (pauses >= 4 && confidence <= 10) return CHARACTERS.freezer
-  if (grammar >= 17 && spontaneity <= 9) return CHARACTERS.pretender
-  if (fillers >= 8) return CHARACTERS.rusher
-  if (completion <= 14 && spontaneity >= 10) return CHARACTERS.sparker
-  if (completion >= 20 && confidence <= 9) return CHARACTERS.rambler
-  return completion > 15 ? CHARACTERS.rambler : CHARACTERS.sparker
+  if (score >= 80) return CHARACTERS.ghost
+  if (confidence <= 7 && completion <= 12) return CHARACTERS.freezer
+  if (fillers >= 5 || fillerPenalty >= 10) return CHARACTERS.rusher
+  if (grammar >= 15 && spontaneity <= 7) return CHARACTERS.pretender
+  if (completion >= 15 && confidence <= 8) return CHARACTERS.rambler
+  if (spontaneity >= 9 && completion <= 13) return CHARACTERS.sparker
+
+  // Fallbacks
+  if (fillers > 3) return CHARACTERS.rusher
+  if (confidence < 10) return CHARACTERS.freezer
+  return CHARACTERS.rambler
 }
 
 function AnalyzingScreen({ transcript }) {

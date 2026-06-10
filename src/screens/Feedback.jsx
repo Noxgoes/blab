@@ -418,6 +418,14 @@ export default function Feedback({ language, level, topic, transcript, fillerCou
     }
   }
 
+  const handleShareX = () => {
+    const scoreVal = Math.round(data?.score ?? 0)
+    const type = getArchetype(data)?.title ?? 'Speaker'
+    const tweetText = `I scored ${scoreVal} on BLAB and identified as a "${type}" speaking type. Rate my fluency. Try it here: https://blab.app`
+    const url = `https://x.com/intent/tweet?text=${encodeURIComponent(tweetText)}`
+    window.open(url, '_blank', 'noopener,noreferrer')
+  }
+
   const generateLocalData = (errorMsg) => {
     const words = transcript.trim().split(/\s+/).filter(Boolean)
     const fillerTotal = Object.values(fillerCounts).reduce((a, b) => a + b, 0)
@@ -719,8 +727,9 @@ export default function Feedback({ language, level, topic, transcript, fillerCou
             </div>
           ) : <p className="fbc__save-label">+{data.xp || 0} XP earned</p>)}
         </div>
-        <div style={{ display: 'flex', gap: 10 }}>
+        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', justifyContent: 'center' }}>
           <button className="fbc__copy-btn" onClick={handleDownloadPNG}>{copied ? 'DOWNLOADING...' : 'DOWNLOAD PNG'}</button>
+          <button className="fbc__copy-btn" onClick={handleShareX}>SHARE ON X</button>
           <button className="fbc__copy-btn fbc__copy-btn--ghost" onClick={onRestart}>SPEAK AGAIN</button>
         </div>
       </div>

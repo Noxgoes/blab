@@ -4806,6 +4806,7 @@ h3,
 
 .fbc__coach-wrap--bottom {
   margin-top: auto;
+  padding-top: 32px;
   padding-bottom: 32px;
   width: 100%;
   display: flex;

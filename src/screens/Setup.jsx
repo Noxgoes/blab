@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
 const LANGUAGES = [
   { name: 'English', native: 'English' },
@@ -22,6 +22,14 @@ const LEVELS = [
 
 export default function Setup({ language, setLanguage, level, setLevel, mode, setMode, onDone }) {
   const [step, setStep] = useState(0)
+  
+  useEffect(() => {
+    setLanguage('')
+    setLevel('')
+    setMode('')
+    setStep(0)
+  }, [setLanguage, setLevel, setMode])
+
   const [isRequestingMic, setIsRequestingMic] = useState(false)
   const [isGenerating, setIsGenerating] = useState(false)
   const [micError, setMicError] = useState('')

@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Playfair+Display:ital,wght@0,400;0,700;1,400;1,700&family=Space+Mono:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Instrument+Serif:ital,wght@0,400;1,400&family=Space+Mono:wght@400;700&display=swap');
 
 /* ===================== DESIGN TOKENS ===================== */
 :root {
@@ -15,7 +15,7 @@
   --accent-green-glow: rgba(42, 138, 86, 0.15);
   --border: #d4cdc4;
   --radius: 2px;
-  --font-serif: 'Playfair Display', Georgia, serif;
+  --font-serif: 'Instrument Serif', 'Playfair Display', Georgia, serif;
   --font-mono: 'Space Mono', 'Courier New', monospace;
   --font: 'Inter', system-ui, -apple-system, sans-serif;
   --transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);

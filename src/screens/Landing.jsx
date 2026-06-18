@@ -113,7 +113,7 @@ export default function Landing({ userData, onStart }) {
       const rect = container.getBoundingClientRect()
       const cx = rect.width / 2
       const cy = rect.height / 2
-      const R = Math.min(cx, cy) * 0.88  // orbit radius relative to container
+      const R = Math.min(cx, cy) * 1.02  // orbit radius relative to container
 
       if (!draggingRef.current) {
         angleRef.current += SPEED
@@ -184,7 +184,7 @@ export default function Landing({ userData, onStart }) {
     const rect = container.getBoundingClientRect()
     const cx = rect.width / 2
     const cy = rect.height / 2
-    const R = Math.min(cx, cy) * 0.88
+    const R = Math.min(cx, cy) * 1.02
     const dx = annState.current[i].dragX - cx
     const dy = annState.current[i].dragY - cy
     const dist = Math.sqrt(dx * dx + dy * dy)

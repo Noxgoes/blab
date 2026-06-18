@@ -6,15 +6,21 @@ export async function analyzeTranscript(groq, { transcript, language, level, top
   const cleanTranscript = (transcript || '').replace(/<[^>]*>?/gm, '').trim().slice(0, 5000);
 
   const completion = await groq.chat.completions.create({
-    model: 'llama-3.1-8b-instant',
-    max_tokens: 800,
+    model: 'llama-3.3-70b-versatile',
+    max_tokens: 1600,
     temperature: 0.7,
     response_format: { type: "json_object" },
     messages: [
       {
         role: 'system',
-        content: `You are BLAB, a brutally honest spoken language coach. You analyze transcripts and give direct, specific, no-sugarcoating feedback. Reference actual words the user said. Never be generic. You provide feedback in a strict JSON format. 
-IMPORTANT: All text values and feedback strings in the JSON (including 'coach_line', 'feedback_breakdown' descriptions, 'sentence_analysis' observation/tip, 'grammar_notes', 'native_comparison', 'what_you_did_well', 'where_you_fell_apart', 'rewrite', 'frameworks' details, and 'next_focus') MUST be written entirely in the user's chosen language: ${language}. Keep the JSON keys and fixed categories (like 'vibe_analysis' or 'structure_type') in English.`
+        content: `You are BLAB, a direct and constructive spoken language coach. Analyze transcripts and give actionable, specific feedback — always quote or reference actual words the user said. Never be vague, generic, or use jokes/roasts.
+
+CRITICAL RULES:
+1. 'what_you_did_well' MUST have 2-4 items. Even terrible speakers did SOMETHING — attempted the topic, used a correct word, formed a sentence, showed courage. Find it.
+2. 'where_you_fell_apart' MUST have 2-4 items with specific, actionable improvement steps the user can practice today.
+3. 'frameworks' MUST have exactly 2 items with non-empty 'how' fields.
+4. 'next_focus' MUST be a single concrete, actionable sentence.
+5. ALL text values (coach_line, feedback strings, observations, etc.) MUST be written in ${language}. Keep JSON keys in English.`
       },
       {
         role: 'user',
@@ -30,36 +36,36 @@ Score 0-100 using this formula (Internal):
 Return ONLY valid JSON, no markdown:
 {
   "score": <0-100>,
-  "coach_line": "<brutal one liner quoting actual words>",
+  "coach_line": "<candid, actionable one-liner quoting actual words>",
   "vibe_analysis": "<Hesitant/Confident/Scattered/Rushed/Frozen/Sharp>",
   "filler_breakdown": {
     "total": <number>,
     "verdict": "<Clean/Acceptable/Heavy/Excessive>"
   },
-  "feedback_breakdown": {
-    "fillers": "Direct advice on the specific fillers they used.",
-    "completion": "Whether they explored the topic enough.",
-    "grammar": "Point out one specific error and give a 'CORRECTED:' version.",
-    "confidence": "Observation on their hesitation/pacing.",
-    "spontaneity": "Depth of original thought vs generic phrases.",
-    "pauses": "Observation on silence usage."
+     "feedback_breakdown": {
+    "fillers": "Direct advice on the specific fillers they used, as a plain sentence.",
+    "completion": "Whether they explored the topic enough, as a plain sentence.",
+    "grammar": "One specific error they made and how to fix it, written as a single plain sentence (e.g. 'You said X — say Y instead').",
+    "confidence": "Observation on their hesitation/pacing, as a plain sentence.",
+    "spontaneity": "Depth of original thought vs generic phrases, as a plain sentence.",
+    "pauses": "Observation on silence usage, as a plain sentence."
   },
   "sentence_analysis": {
     "structure_type": "<Simple/Complex/Run-on/Fragmented>",
-    "observation": "One brutal observation about their sentence architecture.",
+    "observation": "One clear, constructive observation about their sentence architecture.",
     "tip": "One specific architectural tip to improve."
   },
   "grammar_notes": "Technical notes on their grammar.",
   "grammatical_level": "A1-C2",
   "native_comparison": "2-3 sentences on how a native would differ.",
-  "what_you_did_well": ["3-4 specific positive points"],
-  "where_you_fell_apart": ["3-4 specific negative/improvement points"],
+  "what_you_did_well": ["ALWAYS return 2-4 specific positive points. Even poor speakers attempt something — find it. Never return an empty array."],
+  "where_you_fell_apart": ["ALWAYS return 2-4 specific improvement points grounded in what they actually said. Never return an empty array."],
   "rewrite": "The full sentence they should have said instead.",
   "frameworks": [
-    {"name": "STAR", "how": "how to use it here"},
-    {"name": "PEEL", "how": "how to use it here"}
+    {"name": "FRAMEWORK NAME", "how": "Specific instruction on how to apply it to THIS topic and what they said. MUST be non-empty."},
+    {"name": "FRAMEWORK NAME", "how": "Specific instruction on how to apply it to THIS topic and what they said. MUST be non-empty."}
   ],
-  "next_focus": "The single most important thing to fix next.",
+  "next_focus": "The single most important actionable thing to fix next session. MUST be a non-empty plain sentence.",
   "rank": "Descriptive title based on performance",
   "score_breakdown": {
     "filler_penalty": <0-25>,
@@ -147,3 +153,4 @@ export async function generateDeepgramToken(apiKey) {
     throw new Error("Failed to generate secure session token.");
   }
 }
+

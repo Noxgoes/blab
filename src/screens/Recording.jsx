@@ -120,71 +120,95 @@ export default function Recording({ topic, language, micStream, setMicStream, on
         const mediaRecorder = new MediaRecorder(streamRef.current)
         mediaRecorderRef.current = mediaRecorder
 
-        const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://localhost:3002' : '');
-        const proxyBase = API_URL.replace(/^http/, 'ws')
-        const socket = new WebSocket(
-          `${proxyBase}/stream?lang=${codeToUse}&model=nova-2`
-        )
-        socketRef.current = socket
+        // Build an absolute WebSocket URL.
+        // In dev: use localhost:3002. In prod: use VITE_API_URL (Render backend).
+        // Fallback to window.location.origin so we never produce a bare relative WS path.
+        const rawApiUrl = import.meta.env.VITE_API_URL
+          || (import.meta.env.DEV ? 'http://localhost:3002' : window.location.origin)
+        const proxyBase = rawApiUrl.replace(/^http/, 'ws')
+        const wsUrl = `${proxyBase}/stream?lang=${codeToUse}&model=nova-2`
 
-        mediaRecorder.ondataavailable = (e) => {
-          if (e.data.size > 0 && socket.readyState === WebSocket.OPEN) {
-            socket.send(e.data)
-          }
-        }
+        // Retry helper: Render free tier cold-starts can drop the first WS upgrade
+        // immediately. Retry up to MAX_RETRIES times with a short delay.
+        const MAX_RETRIES = 3
+        let retryCount = 0
 
-        socket.onopen = () => {
-          if (isCancelled) { socket.close(); return }
-          // Tiny delay to let hardware mic warm up after permissions are granted
-          setTimeout(() => {
-            if (!isCancelled && mediaRecorder.state === 'inactive') {
-              mediaRecorder.start(250)
+        const openSocket = () => {
+          if (isCancelled) return
+          const socket = new WebSocket(wsUrl)
+          socketRef.current = socket
+
+          mediaRecorder.ondataavailable = (e) => {
+            if (e.data.size > 0 && socket.readyState === WebSocket.OPEN) {
+              socket.send(e.data)
             }
-          }, 300)
-        }
-
-        socket.onerror = (err) => {
-          if (!isFallback && codeToUse !== 'en') {
-            setFallbackError(true)
-            if (socketRef.current && socketRef.current.readyState <= WebSocket.OPEN) socketRef.current.close()
-            if (!isCancelled) initDeepgram('en', true)
           }
-        }
 
-        socket.onmessage = (message) => {
-          const data = JSON.parse(message.data)
-          if (data.channel && data.channel.alternatives && data.channel.alternatives.length > 0) {
-            const transcriptChunk = data.channel.alternatives[0].transcript
-            const isFinal = data.is_final
-            if (transcriptChunk) {
-              // Always track latest interim as backup in case DG closes before sending final
-              lastInterimRef.current = transcriptChunk
-            }
-            if (isFinal && transcriptChunk) {
-              lastInterimRef.current = '' // clear — captured in final
-              const currentCounts = { ...fillerCountsRef.current }
-              let countsChanged = false
-              const activeLangCode = isFallback ? 'en' : codeToUse
-              const fillerList = fillerWordMap[activeLangCode] || fillerWordMap['en']
-              fillerList.forEach(word => {
-                const regex = new RegExp('\\b' + word + '\\b', 'gi')
-                const matches = transcriptChunk.match(regex)
-                if (matches) {
-                  currentCounts[word] = (currentCounts[word] || 0) + matches.length
-                  countsChanged = true
-                }
-              })
-              if (countsChanged) {
-                fillerCountsRef.current = currentCounts
-                setFillerCounts(currentCounts)
+          socket.onopen = () => {
+            if (isCancelled) { socket.close(); return }
+            retryCount = 0 // reset on successful open
+            // Tiny delay to let hardware mic warm up after permissions are granted
+            setTimeout(() => {
+              if (!isCancelled && mediaRecorder.state === 'inactive') {
+                mediaRecorder.start(250)
               }
-              finalTranscriptRef.current += ' ' + transcriptChunk
+            }, 300)
+          }
+
+          socket.onerror = () => {
+            if (isCancelled) return  // cleanup closed it — don't retry
+            if (retryCount < MAX_RETRIES) {
+              retryCount++
+              console.warn(`[WS] Connection failed, retrying (${retryCount}/${MAX_RETRIES}) in 2s…`)
+              setTimeout(openSocket, 2000)
+            } else if (!isFallback && codeToUse !== 'en') {
+              // All retries exhausted — fall back to English
+              setFallbackError(true)
+              if (socketRef.current && socketRef.current.readyState <= WebSocket.OPEN) socketRef.current.close()
+              if (!isCancelled) initDeepgram('en', true)
             }
-            const fullText = (finalTranscriptRef.current + ' ' + (isFinal ? '' : transcriptChunk)).trim()
-            setTranscript(fullText)
-            setLines(buildLines(fullText))
+          }
+
+          // onmessage MUST live inside openSocket so every retried socket
+          // gets its own handler (not just the first one returned).
+          socket.onmessage = (message) => {
+            if (isCancelled) return
+            const data = JSON.parse(message.data)
+            if (data.channel && data.channel.alternatives && data.channel.alternatives.length > 0) {
+              const transcriptChunk = data.channel.alternatives[0].transcript
+              const isFinal = data.is_final
+              if (transcriptChunk) {
+                // Always track latest interim as backup in case DG closes before sending final
+                lastInterimRef.current = transcriptChunk
+              }
+              if (isFinal && transcriptChunk) {
+                lastInterimRef.current = '' // clear — captured in final
+                const currentCounts = { ...fillerCountsRef.current }
+                let countsChanged = false
+                const activeLangCode = isFallback ? 'en' : codeToUse
+                const fillerList = fillerWordMap[activeLangCode] || fillerWordMap['en']
+                fillerList.forEach(word => {
+                  const regex = new RegExp('\\b' + word + '\\b', 'gi')
+                  const matches = transcriptChunk.match(regex)
+                  if (matches) {
+                    currentCounts[word] = (currentCounts[word] || 0) + matches.length
+                    countsChanged = true
+                  }
+                })
+                if (countsChanged) {
+                  fillerCountsRef.current = currentCounts
+                  setFillerCounts(currentCounts)
+                }
+                finalTranscriptRef.current += ' ' + transcriptChunk
+              }
+              const fullText = (finalTranscriptRef.current + ' ' + (isFinal ? '' : transcriptChunk)).trim()
+              setTranscript(fullText)
+              setLines(buildLines(fullText))
+            }
           }
         }
+
+        openSocket()
       } catch (err) {
         console.error('Mic Error:', err)
         setMicError(err.message || 'Microphone access denied or device not found.')

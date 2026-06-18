@@ -139,7 +139,6 @@ app.post("/api/analyze", analyzeLimiter, async (req, res) => {
     res.status(500).json({ error: 'Something broke on our end. Try again.' });
   }
 });
-
 // Port listener for local fallback development
 if (process.env.NODE_ENV !== 'production') {
   const port = process.env.PORT || 3002;

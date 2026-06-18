@@ -169,6 +169,102 @@ export default function Feedback({ language, level, topic, transcript, fillerCou
   const [showTranscript, setShowTranscript] = useState(false)
   const [showModalIdCard, setShowModalIdCard] = useState(false)
 
+  const [translatedData, setTranslatedData] = useState(null)
+  const [translating, setTranslating] = useState(false)
+  const [isEnglishToggled, setIsEnglishToggled] = useState(false)
+  const [translationError, setTranslationError] = useState(null)
+
+  const translateTextFree = async (text, targetLang = 'en') => {
+    if (!text || typeof text !== 'string' || text.trim() === '') return text
+    try {
+      const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=${targetLang}&dt=t&q=${encodeURIComponent(text)}`
+      const res = await fetch(url)
+      if (!res.ok) return text
+      const json = await res.json()
+      if (json && json[0]) {
+        return json[0].map(s => s[0] || '').join('').trim()
+      }
+    } catch (e) {
+      console.error('Translation error for text:', text, e)
+    }
+    return text
+  }
+
+  const handleTranslateFeedback = async () => {
+    if (translatedData) {
+      setIsEnglishToggled(!isEnglishToggled)
+      return
+    }
+    if (translating) return
+
+    setTranslating(true)
+    setTranslationError(null)
+    try {
+      const copy = JSON.parse(JSON.stringify(data))
+
+      // Translate top-level strings
+      if (copy.coach_line) copy.coach_line = await translateTextFree(copy.coach_line)
+      if (copy.vibe_analysis) copy.vibe_analysis = await translateTextFree(copy.vibe_analysis)
+      if (copy.rank) copy.rank = await translateTextFree(copy.rank)
+      if (copy.rewrite) copy.rewrite = await translateTextFree(copy.rewrite)
+      if (copy.next_focus) copy.next_focus = await translateTextFree(copy.next_focus)
+
+      // Translate filler_breakdown
+      if (copy.filler_breakdown && copy.filler_breakdown.verdict) {
+        copy.filler_breakdown.verdict = await translateTextFree(copy.filler_breakdown.verdict)
+      }
+
+      // Translate feedback_breakdown
+      if (copy.feedback_breakdown) {
+        for (const key of Object.keys(copy.feedback_breakdown)) {
+          copy.feedback_breakdown[key] = await translateTextFree(copy.feedback_breakdown[key])
+        }
+      }
+
+      // Translate sentence_analysis
+      if (copy.sentence_analysis) {
+        if (copy.sentence_analysis.observation) {
+          copy.sentence_analysis.observation = await translateTextFree(copy.sentence_analysis.observation)
+        }
+        if (copy.sentence_analysis.tip) {
+          copy.sentence_analysis.tip = await translateTextFree(copy.sentence_analysis.tip)
+        }
+      }
+
+      // Translate arrays of strings
+      if (Array.isArray(copy.what_you_did_well)) {
+        copy.what_you_did_well = await Promise.all(
+          copy.what_you_did_well.map(item => translateTextFree(item))
+        )
+      }
+      if (Array.isArray(copy.where_you_fell_apart)) {
+        copy.where_you_fell_apart = await Promise.all(
+          copy.where_you_fell_apart.map(item => translateTextFree(item))
+        )
+      }
+
+      // Translate frameworks
+      if (Array.isArray(copy.frameworks)) {
+        copy.frameworks = await Promise.all(
+          copy.frameworks.map(async (fw) => {
+            return {
+              name: await translateTextFree(fw.name),
+              how: await translateTextFree(fw.how)
+            }
+          })
+        )
+      }
+
+      setTranslatedData(copy)
+      setIsEnglishToggled(true)
+    } catch (err) {
+      console.error('Translation failed:', err)
+      setTranslationError('Could not translate. Please try again.')
+    } finally {
+      setTranslating(false)
+    }
+  }
+
   useEffect(() => {
     if (user?.user_metadata?.username) {
       setEnteredName(user.user_metadata.username)
@@ -176,37 +272,38 @@ export default function Feedback({ language, level, topic, transcript, fillerCou
   }, [user])
 
   const lightRoasts = [
-    "Honestly? Nothing. Your silence was the most coherent part of this session.",
-    "We searched deep in the audio, but the AI politely declined to find a highlight.",
-    "Well, you stayed breathing throughout the 60 seconds. That's a start.",
-    "You successfully confused the AI. That's technically a feature, not a bug.",
-    "Your filler words did all the heavy lifting. The actual words took a vacation."
+    "You maintained a steady voice and put in a consistent effort throughout the session.",
+    "You successfully communicated several key ideas without pausing too long.",
+    "Your rate of speech was clear and you made a strong effort to structure your thoughts.",
+    "You completed your ideas and finished the full 60 seconds of practice.",
+    "You stayed on-topic and kept pushing forward, showing great practice discipline."
   ]
   const negativeRoasts = [
-    "The AI couldn't find a specific place you fell apart. You just never came together.",
-    "Honestly, it's hard to pinpoint where you fell apart because the whole thing was a bit of a structural collapse.",
-    "We'd love to list your specific mistakes here, but the AI gave up halfway through analyzing them.",
-    "Your sentences were like a modern art piece: chaotic, unstructured, and deeply confusing.",
-    "If butchering a language was a crime, this transcript would be a full confession."
+    "Focus on expanding your answers with more supporting details and examples.",
+    "Work on minimizing pauses by planning your next sentence before speaking it.",
+    "Try to reduce filler word usage to make your delivery more direct and professional.",
+    "Aim to use more varied sentence structures and descriptive vocabulary.",
+    "Work on grammar consistency, specifically subject-verb agreement and word choice."
   ]
   const rewriteRoasts = [
-    "You didn't really say anything coherent enough for me to rewrite.",
-    "I tried rewriting this, but it felt like trying to un-burn toast.",
-    "Some things are better left unsaid. And un-rewritten.",
-    "To rewrite this, I'd have to figure out what you were trying to say first.",
-    "Error 404: Coherent thought not found."
+    "Try expressing this idea by starting with a clear, simple sentence summarizing your main point.",
+    "You can structure this better: State your opinion, give one reason, and then support it with an example.",
+    "Consider breaking down your thoughts into two separate, concise sentences instead of one long run-on.",
+    "To improve clarity, focus on using direct action verbs rather than passive structures.",
+    "Try saying: 'For instance, I believe...' to transition smoothly into your supporting points.",
   ]
   const frameworkRoasts = [
-    { name: "THE BLANK SLATE", how: "We couldn't find a single framework that could save that structure. Just start from zero next time." },
-    { name: "THE RESET BUTTON", how: "Before applying advanced techniques, you need to master stringing three coherent words together." },
-    { name: "THE EMERGENCY STOP", how: "When you realize you have no idea where your sentence is going, just stop. Silence is better than whatever that was." }
+    { name: "PREP FRAMEWORK", how: "State your Point, give a Reason, provide an Example, and restate your Point. This guarantees a structured, easy-to-follow response." },
+    { name: "THE STAR METHOD", how: "Describe the Situation, Task, Action, and Result. This works exceptionally well for sharing experiences or answering situational questions." },
+    { name: "RULE OF THREE", how: "Organize your response around three main points or supporting details. This prevents rambling and keeps your message highly focused." },
+    { name: "PAST-PRESENT-FUTURE", how: "Structure your explanation chronologically: describe how things were, how they are now, and what they will look like in the future." }
   ]
   const focusRoasts = [
-    "Focus on having an actual point before you open your mouth.",
-    "Try completing one single thought before abandoning it for the next.",
-    "Your next focus: mastering the art of the period. Stop your sentences before they bleed to death.",
-    "Next time, decide what you want to say before you start saying it.",
-    "Breathe. You're talking like you're being chased by the alphabet."
+    "Focus on pacing your breathing and aiming for a steady, deliberate rhythm of speaking.",
+    "Focus on completing one full sentence before pausing to start the next one.",
+    "Focus on listening for your top filler word and replacing it with a silent, 1-second pause.",
+    "Focus on stating your main thesis statement in the first 5 seconds of speaking.",
+    "Focus on keeping sentences concise and avoiding run-ons joined by repeated conjunctions."
   ]
   const roastIndex = (topic ? topic.length : 0) % lightRoasts.length
   const selectedRoast = lightRoasts[roastIndex]
@@ -489,16 +586,102 @@ export default function Feedback({ language, level, topic, transcript, fillerCou
     </div>
   )
 
-  const archetype = getArchetype(data)
-  const rankName = getRank ? getRank(userData?.totalXP || 0).name : (data.rank || 'Mumbler')
-  const scoreColor = data.score >= 70 ? '#1a1a1a' : data.score >= 45 ? '#d97008' : '#cc2b2b'
+  const activeData = (isEnglishToggled && translatedData) ? translatedData : data
+  const archetype = getArchetype(activeData)
+  const rankName = getRank ? getRank(userData?.totalXP || 0).name : (activeData.rank || 'Mumbler')
+  const scoreColor = activeData.score >= 70 ? '#1a1a1a' : activeData.score >= 45 ? '#d97008' : '#cc2b2b'
+
+  // Groq occasionally returns breakdown fields as objects instead of strings.
+  // safeText() extracts a readable string from whatever shape arrives.
+  const safeText = (val) => {
+    if (!val) return ''
+    if (typeof val === 'string') return val
+    if (typeof val === 'object') {
+      return val.point || val.text || val.feedback || val.CORRECTED || val.corrected
+        || Object.values(val).find(v => typeof v === 'string')
+        || JSON.stringify(val)
+    }
+    return String(val)
+  }
+
+  // Build practical fallback points derived from actual session data
+  // — used only when Groq returns empty arrays.
+  // Guaranteed to always produce at least 3 items per list.
+  const deriveFallbackPoints = () => {
+    const sb = activeData.score_breakdown || {}
+    const fb = activeData.feedback_breakdown || {}
+    const fillerTotal = activeData.filler_breakdown?.total || 0
+    const topFillers = Object.entries(fillerCounts || {})
+      .filter(([, n]) => n > 0)
+      .sort(([, a], [, b]) => b - a)
+      .slice(0, 3)
+    const wordCount = transcript ? transcript.trim().split(/\s+/).filter(Boolean).length : 0
+    const lvl = level || 'Intermediate'
+
+    const positives = []
+    const improvements = []
+
+    // ── Always-present positives based on actual scores ─────────────
+    // Fillers
+    if (fillerTotal === 0) {
+      positives.push('No filler words detected — your speech was clean throughout.')
+    } else {
+      positives.push(`You kept filler usage to ${fillerTotal} total — that's a workable starting point to reduce further.`)
+    }
+    // Confidence
+    const conf = sb.confidence || 0
+    if (conf >= 10) {
+      positives.push('Your confidence score was above average — you maintained commitment to your sentences.')
+    } else {
+      positives.push('You stayed on-topic for the full session, which shows baseline discipline even when confidence dipped.')
+    }
+    // Completion / word count
+    if (wordCount >= 50) {
+      positives.push(`You produced ${wordCount} words — enough content to work with and improve upon.`)
+    } else if (wordCount > 0) {
+      positives.push(`You made a real attempt at the topic at ${lvl} level — every word counts toward building the habit.`)
+    } else {
+      positives.push('You showed up and attempted speaking, which is where every improvement starts.')
+    }
+
+    // ── Always-present improvements based on actual scores ───────────
+    // Fillers
+    if (topFillers.length > 0) {
+      const fillerStr = topFillers.map(([w, n]) => `"${w}" ×${n}`).join(', ')
+      improvements.push(`You relied on ${fillerStr} — practice replacing each with a silent 1-second pause. Record yourself and count them.`)
+    } else {
+      const grammarNote = safeText(fb.grammar)
+      improvements.push(grammarNote || 'Work on sentence completion — every sentence should have a clear subject, verb, and point before you move on.')
+    }
+    // Completion / development
+    const comp = sb.completion || 0
+    if (comp < 18) {
+      improvements.push('Your answers need more depth — try the rule of 3: give your main point, then 2 specific supporting details or examples.')
+    } else {
+      improvements.push('Push for more spontaneous depth — avoid using the same sentence openers across multiple answers.')
+    }
+    // Confidence / hedging
+    if (conf < 10) {
+      improvements.push('Cut hedging language ("I think maybe", "kind of", "sort of") — state your point directly and own it.')
+    } else {
+      const spontNote = safeText(fb.spontaneity)
+      improvements.push(spontNote || 'Challenge yourself to use more topic-specific vocabulary in your next session instead of general phrases.')
+    }
+
+    return { positives: positives.slice(0, 3), improvements: improvements.slice(0, 3) }
+  }
+
+  const fallback = (!activeData.what_you_did_well?.length || !activeData.where_you_fell_apart?.length)
+    ? deriveFallbackPoints()
+    : null
+
   const breakdownEntries = [
-    { label: 'Fillers', text: data.feedback_breakdown?.fillers || `${data.filler_breakdown?.total || 0} fillers detected.` },
-    { label: 'Grammar', text: data.feedback_breakdown?.grammar || "Watch your sentence structure." },
-    { label: 'Pauses', text: data.feedback_breakdown?.pauses || `${data.pauses_inferred || 0} long pauses detected.` },
-    { label: 'Completion', text: data.feedback_breakdown?.completion || "Try to expand on your reasons." },
-    { label: 'Confidence', text: data.feedback_breakdown?.confidence || "Speak with more certainty." },
-    { label: 'Spontaneity', text: data.feedback_breakdown?.spontaneity || "Try to be more expressive." },
+    { label: 'Fillers',      text: safeText(activeData.feedback_breakdown?.fillers)      || `${activeData.filler_breakdown?.total || 0} fillers detected.` },
+    { label: 'Grammar',      text: safeText(activeData.feedback_breakdown?.grammar)      || "Watch your sentence structure." },
+    { label: 'Pauses',       text: safeText(activeData.feedback_breakdown?.pauses)       || `${activeData.pauses_inferred || 0} long pauses detected.` },
+    { label: 'Completion',   text: safeText(activeData.feedback_breakdown?.completion)   || "Try to expand on your reasons." },
+    { label: 'Confidence',   text: safeText(activeData.feedback_breakdown?.confidence)   || "Speak with more certainty." },
+    { label: 'Spontaneity',  text: safeText(activeData.feedback_breakdown?.spontaneity)  || "Try to be more expressive." },
   ].filter(b => b.text)
 
   const idCardContent = (
@@ -527,35 +710,35 @@ export default function Feedback({ language, level, topic, transcript, fillerCou
           </svg>
         </div>
         <div className="sc3__score-right">
-          <span className="sc3__score-val">{Math.round(data.score)}</span>
+          <span className="sc3__score-val">{Math.round(activeData.score)}</span>
           <span className="sc3__score-max">/100</span>
         </div>
       </div>
       <div className="sc3__stats-row">
         <div className="sc3__stat-col">
           <div className="sc3__col-lbl">FILLERS</div>
-          <div className="sc3__col-val sc3__col-val--red">{data.filler_breakdown?.total || 0}</div>
-          <div className="sc3__col-sub">{(data.filler_breakdown?.total || 0) > 5 ? 'HIGH' : 'LOW'}</div>
+          <div className="sc3__col-val sc3__col-val--red">{activeData.filler_breakdown?.total || 0}</div>
+          <div className="sc3__col-sub">{(activeData.filler_breakdown?.total || 0) > 5 ? 'HIGH' : 'LOW'}</div>
         </div>
         <div className="sc3__stat-col">
           <div className="sc3__col-lbl">PACE</div>
-          <div className="sc3__col-val">{(data.score_breakdown?.confidence || 10) > 12 ? 'DYNAMIC' : (data.score_breakdown?.confidence || 10) > 8 ? 'GOOD' : 'STEADY'}</div>
+          <div className="sc3__col-val">{(activeData.score_breakdown?.confidence || 10) > 12 ? 'DYNAMIC' : (activeData.score_breakdown?.confidence || 10) > 8 ? 'GOOD' : 'STEADY'}</div>
           <div className="sc3__col-sub">OPTIMAL</div>
         </div>
         <div className="sc3__stat-col">
           <div className="sc3__col-lbl">XP EARNED</div>
-          <div className="sc3__col-val sc3__col-val--red">{data.xp || 0}</div>
+          <div className="sc3__col-val sc3__col-val--red">{activeData.xp || 0}</div>
           <div className="sc3__col-sub">PTS</div>
         </div>
         <div className="sc3__stat-col sc3__stat-col--last">
           <div className="sc3__col-lbl">VIBE</div>
-          <div className="sc3__col-val">{data.vibe_analysis?.toUpperCase() || 'SCATTERED'}</div>
+          <div className="sc3__col-val">{activeData.vibe_analysis?.toUpperCase() || 'SCATTERED'}</div>
           <div className="sc3__col-sub">UNCLEAR</div>
         </div>
       </div>
       <div className="sc3__quote-area">
         <span className="sc3__quote-mark">“</span>
-        <p className="sc3__quote-text">"{data.coach_line}"</p>
+        <p className="sc3__quote-text">"{activeData.coach_line}"</p>
       </div>
       <div className="sc3__footer">
         <button className="sc3__footer-link" onClick={() => setCardIndex(0)}>VIEW BREAKDOWN →</button>
@@ -579,7 +762,7 @@ export default function Feedback({ language, level, topic, transcript, fillerCou
     </div>,
     <div className="fbc" key="verdict">
       <div className="fbc__inner">
-        {data.isLocal && (
+        {activeData.isLocal && (
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: 16 }}>
             <div className="fbc__eyebrow fbc__eyebrow--red">⚠️ LOCAL REVIEW (API ERROR)</div>
             {apiError && (
@@ -603,8 +786,8 @@ export default function Feedback({ language, level, topic, transcript, fillerCou
         <div className="fbc__eyebrow" style={{ opacity: 0.6, letterSpacing: '0.24em' }}>FLUENCY SCORE</div>
         <div className="fbc__score-wrap"><div className="fbc__score" style={{ color: scoreColor }}>{displayScore}</div></div>
         <div className="fbc__coach-wrap fbc__coach-wrap--bottom" style={{ alignItems: 'center', textAlign: 'center' }}>
-          <p className="fbc__coach-line" style={{ maxWidth: 320, textAlign: 'center' }}>"{data.coach_line}"</p>
-          {data.vibe_analysis && <div className="fbc__vibe-pill fbc__vibe-pill--center">VIBE: {data.vibe_analysis.toUpperCase()}</div>}
+          <p className="fbc__coach-line" style={{ maxWidth: 320, textAlign: 'center' }}>"{activeData.coach_line}"</p>
+          {activeData.vibe_analysis && <div className="fbc__vibe-pill fbc__vibe-pill--center">VIBE: {activeData.vibe_analysis.toUpperCase()}</div>}
         </div>
       </div>
     </div>,
@@ -639,33 +822,33 @@ export default function Feedback({ language, level, topic, transcript, fillerCou
       <div className="fbc__split">
         <div className="fbc__split-half fbc__split-half--top">
           <div className="fbc__eyebrow" style={{ color: '#2a8a56' }}>✓ WHAT WORKED</div>
-          {data.what_you_did_well && data.what_you_did_well.length > 0 ? (
-            data.what_you_did_well.slice(0, 4).map((w, i) => (
+          {activeData.what_you_did_well && activeData.what_you_did_well.length > 0 ? (
+            activeData.what_you_did_well.slice(0, 4).map((w, i) => (
               <div className="fbc__list-item" key={i}>
                 <span className="fbc__icon fbc__icon--good">✓</span>
                 <p className="fbc__list-text">{w}</p>
               </div>
             ))
           ) : (
-            <div className="fbc__list-item" style={{ display: 'flex', alignItems: 'center' }}>
-              <span className="fbc__icon fbc__icon--roast" style={{ fontSize: '15px' }}>🔥</span>
-              <p className="fbc__list-text" style={{ fontStyle: 'italic', color: '#cc2b2b' }}>
-                "{selectedRoast}"
-              </p>
-            </div>
+            (fallback?.positives || []).map((point, i) => (
+              <div className="fbc__list-item" key={i}>
+                <span className="fbc__icon fbc__icon--good">✓</span>
+                <p className="fbc__list-text">{point}</p>
+              </div>
+            ))
           )}
         </div>
         <div className="fbc__split-divider" /><div className="fbc__split-half fbc__split-half--bottom">
           <div className="fbc__eyebrow" style={{ color: '#cc2b2b' }}>× WHERE YOU FELL APART</div>
-          {data.where_you_fell_apart && data.where_you_fell_apart.length > 0 ? (
-            data.where_you_fell_apart.slice(0, 4).map((w, i) => <div className="fbc__list-item" key={i}><span className="fbc__icon fbc__icon--bad">×</span><p className="fbc__list-text">{w}</p></div>)
+          {activeData.where_you_fell_apart && activeData.where_you_fell_apart.length > 0 ? (
+            activeData.where_you_fell_apart.slice(0, 4).map((w, i) => <div className="fbc__list-item" key={i}><span className="fbc__icon fbc__icon--bad">×</span><p className="fbc__list-text">{w}</p></div>)
           ) : (
-            <div className="fbc__list-item" style={{ display: 'flex', alignItems: 'center' }}>
-              <span className="fbc__icon fbc__icon--roast" style={{ fontSize: '15px' }}>💀</span>
-              <p className="fbc__list-text" style={{ fontStyle: 'italic', color: '#cc2b2b' }}>
-                "{selectedNegativeRoast}"
-              </p>
-            </div>
+            (fallback?.improvements || []).map((point, i) => (
+              <div className="fbc__list-item" key={i}>
+                <span className="fbc__icon fbc__icon--bad">×</span>
+                <p className="fbc__list-text">{point}</p>
+              </div>
+            ))
           )}
         </div>
       </div>
@@ -673,18 +856,18 @@ export default function Feedback({ language, level, topic, transcript, fillerCou
     <div className="fbc fbc--dark" key="architecture">
       <div className="fbc__inner">
         <div className="fbc__eyebrow fbc__eyebrow--red">SENTENCE ARCHITECTURE</div>
-        <div className="fbc__arch-verdict">{data.sentence_analysis?.structure_type?.toUpperCase() || 'SIMPLE'}</div>
+        <div className="fbc__arch-verdict">{activeData.sentence_analysis?.structure_type?.toUpperCase() || 'SIMPLE'}</div>
         <div className="fbc__divider fbc__divider--white" />
-        <p className="fbc__arch-obs">"{data.sentence_analysis?.observation}"</p>
-        <div className="fbc__arch-tip"><span className="fbc__eyebrow" style={{ fontSize: 8 }}>BUILDER TIP</span><p>{data.sentence_analysis?.tip}</p></div>
+        <p className="fbc__arch-obs">"{activeData.sentence_analysis?.observation}"</p>
+        <div className="fbc__arch-tip"><span className="fbc__eyebrow" style={{ fontSize: 8 }}>BUILDER TIP</span><p>{activeData.sentence_analysis?.tip}</p></div>
       </div>
     </div>,
     <div className="fbc fbc--red" key="rewrite">
       <div className="fbc__inner">
         <div className="fbc__eyebrow fbc__eyebrow--white">THE SENTENCE YOU SHOULD HAVE SAID</div>
-        <div className="fbc__rewrite-quote">"{data.rewrite && data.rewrite.trim() !== '' && data.rewrite !== '...' ? data.rewrite : selectedRewriteRoast}"</div>
-        {data.native_comparison && (
-          <><div className="fbc__divider fbc__divider--white" /><div className="fbc__eyebrow fbc__eyebrow--white" style={{ opacity: 0.6, marginBottom: 12 }}>NATIVE COMPARISON</div><p className="fbc__native-text">{data.native_comparison}</p></>
+        <div className="fbc__rewrite-quote">"{activeData.rewrite && activeData.rewrite.trim() !== '' && activeData.rewrite !== '...' ? activeData.rewrite : selectedRewriteRoast}"</div>
+        {activeData.native_comparison && (
+          <><div className="fbc__divider fbc__divider--white" /><div className="fbc__eyebrow fbc__eyebrow--white" style={{ opacity: 0.6, marginBottom: 12 }}>NATIVE COMPARISON</div><p className="fbc__native-text">{activeData.native_comparison}</p></>
         )}
       </div>
     </div>,
@@ -692,8 +875,8 @@ export default function Feedback({ language, level, topic, transcript, fillerCou
       <div className="fbc__inner fbc__inner--left" style={{ justifyContent: 'space-between', paddingBottom: 24 }}>
         <div className="fbc__eyebrow">USE THIS NEXT TIME</div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12, width: '100%' }}>
-          {data.frameworks && data.frameworks.length > 0 ? (
-            data.frameworks.slice(0, 2).map(f => <div className="fbc__fw-box" key={f.name} style={{ marginTop: 0 }}><div className="fbc__fw-name">{f.name}</div><p className="fbc__fw-how">{f.how}</p></div>)
+          {activeData.frameworks && activeData.frameworks.length > 0 ? (
+            activeData.frameworks.slice(0, 2).map(f => <div className="fbc__fw-box" key={f.name} style={{ marginTop: 0 }}><div className="fbc__fw-name">{f.name}</div><p className="fbc__fw-how">{f.how}</p></div>)
           ) : (
             <div className="fbc__fw-box" style={{ marginTop: 0 }}>
               <div className="fbc__fw-name" style={{ color: '#cc2b2b' }}>{selectedFrameworkRoast.name}</div>
@@ -703,8 +886,8 @@ export default function Feedback({ language, level, topic, transcript, fillerCou
         </div>
         <div className="fbc__focus-box" style={{ width: '100%', marginTop: 0 }}>
           <div className="fbc__eyebrow fbc__eyebrow--red" style={{ marginBottom: 10 }}>FOCUS FOR NEXT SESSION</div>
-          <p className="fbc__focus-text" style={{ fontStyle: (!data.next_focus || data.next_focus.trim() === '') ? 'italic' : 'normal', opacity: (!data.next_focus || data.next_focus.trim() === '') ? 0.8 : 1 }}>
-            {data.next_focus && data.next_focus.trim() !== '' ? data.next_focus : selectedFocusRoast}
+          <p className="fbc__focus-text" style={{ fontStyle: (!activeData.next_focus || activeData.next_focus.trim() === '') ? 'italic' : 'normal', opacity: (!activeData.next_focus || activeData.next_focus.trim() === '') ? 0.8 : 1 }}>
+            {activeData.next_focus && activeData.next_focus.trim() !== '' ? activeData.next_focus : selectedFocusRoast}
           </p>
         </div>
       </div>
@@ -715,7 +898,7 @@ export default function Feedback({ language, level, topic, transcript, fillerCou
           {leaderboardSubmitted ? (
             <div className="fbc__submitted">
               <p className="fbc__submitted-title">
-                {saveStep === 'no-improvement' ? `Your best is still ${data.score}. Keep going.` : "You're on the board."}
+                {saveStep === 'no-improvement' ? `Your best is still ${activeData.score}. Keep going.` : "You're on the board."}
               </p>
               <p className="fbc__submitted-sub">Speak again to improve your score.</p>
             </div>
@@ -753,7 +936,7 @@ export default function Feedback({ language, level, topic, transcript, fillerCou
                 </>
               )}
             </div>
-          ) : <p className="fbc__save-label">+{data.xp || 0} XP earned</p>)}
+          ) : <p className="fbc__save-label">+{activeData.xp || 0} XP earned</p>)}
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10, width: '100%', marginTop: 8 }}>
           <button className="fbc__copy-btn" onClick={handleDownloadPNG} style={{ margin: 0, width: '100%' }}>{copied ? 'DOWNLOADING...' : 'DOWNLOAD PNG'}</button>
@@ -770,6 +953,36 @@ export default function Feedback({ language, level, topic, transcript, fillerCou
     <div className="fbc-deck">
       <div className="fbc-deck__header">
         <span className="fbc-deck__counter">{cardIndex + 1} / {TOTAL_CARDS}</span>
+        {language && language.toLowerCase() !== 'english' && (
+          <button 
+            className="fbc-deck__translate-btn"
+            onClick={handleTranslateFeedback}
+            disabled={translating}
+            style={{
+              background: isEnglishToggled ? '#cc2b2b' : 'rgba(0, 0, 0, 0.05)',
+              color: isEnglishToggled ? '#fff' : '#1a1a1a',
+              border: '1px solid rgba(0, 0, 0, 0.1)',
+              borderRadius: '20px',
+              padding: '6px 14px',
+              fontSize: '10px',
+              fontWeight: 600,
+              cursor: 'pointer',
+              fontFamily: 'var(--font-mono)',
+              textTransform: 'uppercase',
+              letterSpacing: '0.08em',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 6,
+              transition: 'all 0.2s ease',
+              marginLeft: '16px'
+            }}
+          >
+            {translating ? 'Translating...' : isEnglishToggled ? 'Show Native' : 'Translate to EN'}
+          </button>
+        )}
+        {translationError && (
+          <span style={{ fontSize: '10px', color: '#cc2b2b', fontFamily: 'var(--font-mono)', marginLeft: '12px' }}>{translationError}</span>
+        )}
         <button className="fbc-deck__close" onClick={onRestart} style={{ background: 'none', border: 'none', color: '#1a1a1a', fontSize: '28px', cursor: 'pointer', padding: '0 10px', marginLeft: 'auto', display: 'flex', alignItems: 'center' }}>×</button>
       </div>
 

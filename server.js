@@ -127,7 +127,6 @@ app.post("/analyze", analyzeLimiter, async (req, res) => {
     res.status(500).json({ error: err.message || 'Something broke on our end. Try again.' });
   }
 });
-
 const port = process.env.PORT || 3002;
 const server = app.listen(port, () => {
   console.log(`BLAB API (Groq Mode) running on port ${port}`);
@@ -142,6 +141,65 @@ server.on('error', (err) => {
 // Server forwards to Deepgram with Authorization header (browsers can't set WS headers)
 const wss = new WebSocketServer({ noServer: true });
 
+// ── WS RATE LIMITING ─────────────────────────────────────────────────
+// Track active (concurrent) connections per IP
+const wsActiveByIp = new Map();   // ip → count
+// Track new connection attempts per IP in a rolling 60-second window
+const wsRateByIp  = new Map();    // ip → [timestamp, ...]
+
+const WS_MAX_CONCURRENT  = 2;   // max simultaneous sessions per IP
+const WS_MAX_PER_MINUTE  = 10;  // max new connections per IP per 60 s (retries count, so be generous)
+const WS_RATE_WINDOW_MS  = 60 * 1000;
+
+function getClientIp(request) {
+  return (
+    request.headers['x-forwarded-for']?.split(',')[0].trim() ||
+    request.socket.remoteAddress ||
+    'unknown'
+  );
+}
+
+function wsRateLimitCheck(ip) {
+  const now = Date.now();
+
+  // 1) Concurrent connection cap
+  const active = wsActiveByIp.get(ip) || 0;
+  if (active >= WS_MAX_CONCURRENT) {
+    return { blocked: true, reason: `Too many concurrent sessions (max ${WS_MAX_CONCURRENT}).` };
+  }
+
+  // 2) Per-minute new-connection cap (sliding window)
+  const times = (wsRateByIp.get(ip) || []).filter(t => now - t < WS_RATE_WINDOW_MS);
+  if (times.length >= WS_MAX_PER_MINUTE) {
+    return { blocked: true, reason: `Too many session attempts. Try again in a minute.` };
+  }
+
+  // Record this new attempt
+  times.push(now);
+  wsRateByIp.set(ip, times);
+  return { blocked: false };
+}
+
+function wsTrackOpen(ip) {
+  wsActiveByIp.set(ip, (wsActiveByIp.get(ip) || 0) + 1);
+}
+
+function wsTrackClose(ip) {
+  const n = (wsActiveByIp.get(ip) || 1) - 1;
+  if (n <= 0) wsActiveByIp.delete(ip);
+  else wsActiveByIp.set(ip, n);
+}
+
+// Clean up stale rate-window entries every 5 minutes
+setInterval(() => {
+  const now = Date.now();
+  for (const [ip, times] of wsRateByIp) {
+    const fresh = times.filter(t => now - t < WS_RATE_WINDOW_MS);
+    if (fresh.length === 0) wsRateByIp.delete(ip);
+    else wsRateByIp.set(ip, fresh);
+  }
+}, 5 * 60 * 1000);
+
 server.on('upgrade', (request, socket, head) => {
   const url = new URL(request.url, 'http://localhost:3002');
   if (url.pathname !== '/stream') {
@@ -149,7 +207,24 @@ server.on('upgrade', (request, socket, head) => {
     return;
   }
 
+  // Apply rate limits BEFORE accepting the upgrade (no Deepgram cost incurred)
+  const ip = getClientIp(request);
+  const { blocked, reason } = wsRateLimitCheck(ip);
+  if (blocked) {
+    console.warn(`[WS Rate Limit] Blocked ${ip}: ${reason}`);
+    socket.write('HTTP/1.1 429 Too Many Requests\r\nContent-Type: text/plain\r\n\r\n' + reason);
+    socket.destroy();
+    return;
+  }
+
   wss.handleUpgrade(request, socket, head, (browserWs) => {
+    wsTrackOpen(ip);
+    // Guard: both 'error' and 'close' can fire for the same socket — only decrement once
+    let tracked = true;
+    const onSocketGone = () => { if (tracked) { tracked = false; wsTrackClose(ip); } };
+    browserWs.on('close', onSocketGone);
+    browserWs.on('error', onSocketGone);
+
     const apiKey = process.env.VITE_DEEPGRAM_API_KEY;
     if (!apiKey) {
       browserWs.close(1011, 'Missing API key');

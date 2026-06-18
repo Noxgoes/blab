@@ -147,9 +147,10 @@ const wsActiveByIp = new Map();   // ip → count
 // Track new connection attempts per IP in a rolling 60-second window
 const wsRateByIp  = new Map();    // ip → [timestamp, ...]
 
-const WS_MAX_CONCURRENT  = 2;   // max simultaneous sessions per IP
-const WS_MAX_PER_MINUTE  = 10;  // max new connections per IP per 60 s (retries count, so be generous)
+const WS_MAX_CONCURRENT  = 5;   // max simultaneous sessions per IP
+const WS_MAX_PER_MINUTE  = 30;  // max new connections per IP per 60 s (retries count, so be generous)
 const WS_RATE_WINDOW_MS  = 60 * 1000;
+
 
 function getClientIp(request) {
   return (

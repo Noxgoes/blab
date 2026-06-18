@@ -6,7 +6,7 @@ export async function analyzeTranscript(groq, { transcript, language, level, top
   const cleanTranscript = (transcript || '').replace(/<[^>]*>?/gm, '').trim().slice(0, 5000);
 
   const completion = await groq.chat.completions.create({
-    model: 'llama-3.3-70b-versatile',
+    model: 'llama-3.1-8b-instant',
     max_tokens: 1600,
     temperature: 0.7,
     response_format: { type: "json_object" },

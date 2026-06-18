@@ -159,8 +159,9 @@ export default function Recording({ topic, language, micStream, setMicStream, on
             if (isCancelled) return  // cleanup closed it — don't retry
             if (retryCount < MAX_RETRIES) {
               retryCount++
-              console.warn(`[WS] Connection failed, retrying (${retryCount}/${MAX_RETRIES}) in 2s…`)
-              setTimeout(openSocket, 2000)
+              const delay = 2000 * retryCount
+              console.warn(`[WS] Connection failed, retrying (${retryCount}/${MAX_RETRIES}) in ${delay}ms…`)
+              setTimeout(openSocket, delay)
             } else if (!isFallback && codeToUse !== 'en') {
               // All retries exhausted — fall back to English
               setFallbackError(true)

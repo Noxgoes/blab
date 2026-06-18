@@ -397,17 +397,19 @@ h3,
   flex: 1;
   display: flex;
   overflow: hidden;
+  min-height: 0;
 }
 
 /* LEFT — steps */
 .sp2__body {
   flex: 0 0 55%;
-  padding: 40px 56px 100px;
+  padding: 32px 56px 40px;
   display: flex;
   flex-direction: column;
   overflow-y: auto;
   position: relative;
   z-index: 1;
+  min-height: 0;
 }
 
 /* RIGHT — tongue image */
@@ -437,7 +439,15 @@ h3,
 
 /* STEP BLOCK */
 .sp2__step {
-  padding-bottom: 48px;
+  padding-bottom: 40px;
+}
+
+.sp2__step--done {
+  padding-bottom: 12px;
+}
+
+.sp2__step--done .sp2__step-header {
+  margin-bottom: 0;
 }
 
 .sp2__step--slide {

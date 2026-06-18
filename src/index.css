@@ -443,11 +443,11 @@ h3,
 }
 
 .sp2__step--done {
-  padding-bottom: 12px;
+  padding-bottom: 24px;
 }
 
 .sp2__step--done .sp2__step-header {
-  margin-bottom: 0;
+  margin-bottom: 8px;
 }
 
 .sp2__step--slide {
@@ -5410,7 +5410,7 @@ h3,
 
 .lp-nav__link {
   font-family: var(--font-mono);
-  font-size: 0.65rem;
+  font-size: 0.85rem;
   letter-spacing: 0.2em;
   color: #1a1a1a;
   background: none;
@@ -6858,7 +6858,7 @@ h3,
   border: 1px dashed rgba(196, 30, 30, 0.3) !important;
   padding: 6px 14px !important;
   border-radius: 12px;
-  font-size: 10px !important;
+  font-size: 12px !important;
   font-weight: 700 !important;
 }
 
